@@ -17,7 +17,17 @@ def dfs (start, discovery_timeC, discovery_timeE, neighbors, visited_nodes, curr
     #print("neighbours and edges list are: \n ", neighbors,"\n", edges_list)
     #loops_temp = []
     #print ("len neighbour (0) is ",(len(neighbors[0])), neighbors, "N clusters is ", Nclusters )
-    for n_index in range (len(neighbors[0])):
+    
+
+    #Even better:
+    #for n_index in network.get_number_of_neighbors(start):
+    #   neigh=network.get_neighbor(start,n_index)
+    #   edge=network.get_edge(start,n_index)
+    #   if edge==-1:
+    #       break
+    #   bc=network.get_bc(start,n_index) #could put this further down to avoid unnecessary calls
+
+    for n_index in range (len(neighbors[0])): #neighbors
         neigh = neighbors[start, n_index]
         edge = edges_list[start, n_index]
 
@@ -66,7 +76,7 @@ def linearly_independent (loops_list):
     _, inds = sympy.Matrix(loops_list).T.rref()
     Nloops = len(inds)
     
-    independent_loops = loops_list[inds]
+    independent_loops = loops_list[list(inds)] 
     #print ("independent_loops index and loops: ", independent_loops, inds)
     return independent_loops, Nloops
 

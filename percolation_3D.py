@@ -34,15 +34,16 @@ import reversible_bonds as rev
 import import_reversible as impRev
 
 #general variables, paths to files; 
-path = "/Users/craffaelli/projects/phd/percolation/code/test/C810Cr70S17/"
-dumpname = path+"centerTraj_c8_s10_cRev70_s117eq.bin" #dump file with
+from localsettings import path
+#path = "/Users/craffaelli/projects/phd/percolation/code/test/C810Cr70S17/"
+dumpname = os.path.join(path,"centerTraj_c8_s10_cRev70_s117eq.bin") #dump file with
 print("dump", dumpname) 
 
-revdumpname = path + "revEndTraj_c8_s10_cRev70_s117eq.bin"
+revdumpname = os.path.join(path,"revEndTraj_c8_s10_cRev70_s117eq.bin")
 snapshot="final_snapshot_c8_s10_cRev70_s117eq.txt"
-snapshotname = path + snapshot
+snapshotname = os.path.join(path,snapshot)
 revBonds_count = "revBonds_c8_s10_cRev70_s117eq_fixed.txt"
-revcountname = path + revBonds_count
+revcountname = os.path.join(path,revBonds_count)
 
 name = 'test'
 print("name",name)
@@ -155,9 +156,7 @@ if dropped_list.any(): # if false, no percolation in any direction for sure
 
 counter = 0
 #print(time_now)
-
-
-    
+   
 
     
 c = 0
