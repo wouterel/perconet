@@ -7,7 +7,7 @@ Created on Fri Apr 10 18:04:33 2020
 """
 import numpy as np
 from dropped_list_test import dropped_list  
-
+import sympy
 
 class PeriodicNetwork:
     #stores network structure
@@ -69,21 +69,12 @@ class PeriodicNetwork:
         #returns the bc vector of the n_index'th neighbor of node i
         return self.boundary_crossing [i,n_index, :]
                 
-number_of_clusters = np.amax(dropped_list) +  1
-## NOTE: at this step, in my previous code, I have a dropped_list that only contains boundary crossing elements
-my_test_network = PeriodicNetwork(number_of_clusters, number_of_clusters)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
 
-for i in range(len(dropped_list)):
-    edge_info = dropped_list[i,:]
-    my_test_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
-    
-    
 
 class LoopFinder:
     def __init__(self,network):
         self.network=network
         #allocate arrays and values for dfs stuff
-        self.start = 0
         self.discovery_time_node = 0
         self.discovery_time_edge = 0
         self.visited_nodes = -1 * np.ones (network.number_of_clusters, dtype = int)
@@ -93,37 +84,37 @@ class LoopFinder:
         self.loops_temp = []
         self.loops_list = []
         
-    def dfs(self):
+    def dfs(self, start):
         #in here, get network info whenever using self.network.get_blabla()
         #this function can be private (not callable from the outside)
-        self.visited_nodes [self.start] = self.discovery_time_node
+        self.visited_nodes [start] = self.discovery_time_node
         
-        print ("crossing sum now: \n", self.crossing_sum , "\n visited nodes: ", self.visited_nodes, "\n visited edges: \n", self.visited_edges)
+        #print ("crossing sum now: \n", self.crossing_sum , "\n visited nodes: ", self.visited_nodes, "\n visited edges: \n", self.visited_edges)
+        print ("number of neighbours: ", self.network.get_number_of_neighbors(start), "start: ", start)
         
-        for n_index in range(self.network.get_number_of_neighbors(self.start)):
-            neigh = self.network.get_neighbor(self.start,n_index)
-            edge = self.network.get_edge(self.start,n_index)
-            
-            if edge==-1:
+        for n_index in range(self.network.get_number_of_neighbors(start)): #fix this
+            neigh = self.network.get_neighbor(start,n_index)
+            edge = self.network.get_edge(start,n_index)
+            print ("edge", edge)
+            if edge == -1:
                 break
             
             if self.visited_edges[edge] == -1: # otherwhise neigh is a parent of start
                 self.visited_edges[edge] = self.discovery_time_edge
                 ("visited edges now: ", self.visited_edges)
                 self.discovery_time_edge += 1
-                timestep = self.visited_nodes [self.start]
+                timestep = self.visited_nodes [start]
                 
-                current_crossing = self.crossing_sum [timestep] + self.network.get_boundary_crossing(self.start, n_index)
+                current_crossing = self.crossing_sum [timestep] + self.network.get_boundary_crossing(start, n_index)
                 xC,yC,zC = current_crossing[:]
-                #print ("current crossing sum for ",start,neigh,  ' (index: ', n_index, "), is ", xC,yC,zC, ", current crossing is ",boundary_crossing[start, n_index] )
+                #print ("current crossing sum for ",start,neigh,  ' (index: ', n_index, "), is ", xC,yC,zC, ", current crossing is ",self.network.get_boundary_crossing(start, n_index) )
                 if self.visited_nodes[neigh] == -1:
                     self.discovery_time_node += 1
-                    self.visited_nodes[neigh] = self.discovery_time_node
+                    #self.visited_nodes[neigh] = self.discovery_time_node (no need to do this twice)
                     self.crossing_sum.append ([xC,yC,zC])
-                    
                     #print ("visited nodes: \n",visited_nodes, "\n crossing sum \n", crossing_sum)
                     #loops_temp, discovery_timeC, discovery_timeE = dfs (neigh, discovery_timeC, discovery_timeE, neighbors, visited_nodes, current_crossing, crossing_sum, boundary_crossing, edges_list, visited_edges, loops_temp, Nclusters)
-                    self.loops_temp, self.discovery_time_edge, self.discovery_time_node = myloops.dfs()
+                    LoopFinder.dfs(self,neigh ) #find right one
                     #print ("crossing sum now: \n", crossing_sum, "loops temp is:", loops_temp)
                 else: #we found a loop!
                     
@@ -132,12 +123,10 @@ class LoopFinder:
                     loop = current_crossing - self.crossing_sum [loop_timestep]
 
                     self.loops_temp.append (loop.tolist())
-                    current_crossing -= self.boundary_crossing[self.start, n_index]
-                    #print("loop!  -> ", loops_temp, " loop_timestep: ", loop_timestep, ", crossing sum: ", crossing_sum )
+                    current_crossing -= self.network.get_boundary_crossing(start, n_index)
+                    print("loop!  -> ", self.loops_temp, " loop_timestep: ", loop_timestep, ", crossing sum: ", self.crossing_sum )
+        return
         
-        
-        
-        return self.loops_temp, self.discovery_time_edge, self.discovery_time_node
     
     
     def get_loops(self):
@@ -156,7 +145,7 @@ class LoopFinder:
                 self.loops_temp = []
                 self.discovery_time_node = 0
                 self.discovery_time_edge = 0
-                self.loops_temp, self.discovery_time_edge, self.discovery_time_node = myloops.dfs()
+                LoopFinder.dfs(self, node)
                 
                 self.discovery_time_node += 1
                 if self.loops_temp: 
@@ -168,10 +157,36 @@ class LoopFinder:
  #loops info should also provide a color for each loop to denote connected components
 # lump before clean would discard that info
 # clean before lump would allow having it
-  
 
+def linearly_independent (loops_list):
+    loops_list = np.asarray(loops_list)
+    print("loops list: ", loops_list)
+    _, inds = sympy.Matrix(loops_list).T.rref()
+    Nloops = len(inds)
+    
+    independent_loops = loops_list[list(inds)] 
+    #print ("independent_loops index and loops: ", independent_loops, inds)
+    return independent_loops, Nloops
+  
+number_of_clusters = np.amax(dropped_list) +  1
+## NOTE: at this step, in my previous code, I have a dropped_list that only contains boundary crossing elements
+my_test_network = PeriodicNetwork(number_of_clusters, number_of_clusters)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
+
+for i in range(len(dropped_list)):
+    edge_info = dropped_list[i,:]
+    print(edge_info)
+    my_test_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
+    
+print ("neighbors", my_test_network.neighbors)   
+for i in range (len (my_test_network.neighbors)):
+    print ("number of neighbours: ", my_test_network.get_number_of_neighbors(i))
+    for n_index in range(my_test_network.get_number_of_neighbors(i)):
+                neigh = my_test_network.get_neighbor(i,n_index)
+                edge = my_test_network.get_edge(i,n_index)
+                print ("edge", edge)
         
 myloops=LoopFinder(my_test_network)
 loops=myloops.get_loops()
 
-print (loops)
+
+print ("number of loops \n" , np.asarray(loops), " \n independent loops: \n", linearly_independent(loops)[0])
