@@ -36,7 +36,7 @@ dropped_list1 = np.array([[ 1, 8,  0, -1,  0],
         [9,  2,  0,  0,  -1]])
 
 
-# odd cases (see powerpoint)
+# specific cases (see powerpoint)
 A = np.array([[ 1, 2,  -1, 0,  0],
         [ 2, 3,  1, 0,  0],
         [3,  1,  1,  0,  0]])
