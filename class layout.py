@@ -26,7 +26,7 @@ class periodicnetwork:
     def __init__(self,n,maximum_neighbors_per_node):
         #allocate arrays for per-node info
         
-    def add_edge(node1,node2,boundary_vector):
+    def add_edge(self,node1,node2,boundary_vector):
         #add info for this edge
 
     def get_number_of_neighbors(self,i):
