@@ -9,6 +9,7 @@ import numpy as np
 from dropped_list_test import dropped_list  
 import sympy
 
+
 class PeriodicNetwork:
     #stores network structure
     #contains methods like get_something() to provide network info
@@ -22,30 +23,50 @@ class PeriodicNetwork:
         self.edges_list = -1 * np.ones((n,maximum_neighbors_per_node), dtype = int)
         self.neighbors_counter = np.zeros(n, dtype = int)
         self.edges_counter = 0 #keeps track of the total number of edges while building the edges list
+        self.simple_edges_list = []  #is this duplicate info?
+        self.simple_boundary_crossing = []
+        self.bond_is_across_boundary = []
+        self.needs_reducing = 0
+        self.crosses_boundaries = 0 #should I set anything? is there a way to keep ot empty?
         
-        
-    def add_edge(self,node1,node2,boundary_vector):
+    def add_edge(self,node1,node2, boundary_vector, existing_boundary_crossing_flag = False): #by default(for now, boundary crossing information is taken from boundary vector)
         """ Adds info for this edge """
+        print("boundary vector is: ", boundary_vector, self.neighbors_counter)
+        if not existing_boundary_crossing_flag:     #Improve way of counting
+            if any (boundary_vector):
+                self.bond_is_across_boundary.append(True) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as crossing the boundary
+                #self.bond_is_across_boundary[node1,self.neighbors_counter[node1]] = self.bond_is_across_boundary[node2,self.neighbors_counter[node2]] = True
+                self.crosses_boundaries +=1
+            else:
+                self.bond_is_across_boundary.append(False) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as not crossing the boundary
+                #self.bond_is_across_boundary[node1,self.neighbors_counter[node1]] = self.bond_is_across_boundary[node2,self.neighbors_counter[node2]] = False
+                self.needs_reducing +=1
+        self.simple_edges_list.append([node1,node2])
+        self.simple_boundary_crossing.append([x for x in boundary_vector])
+        
         self.neighbors[node1,self.neighbors_counter[node1]] = node2
         self.edges_list [node1,self.neighbors_counter[node1]] = self.edges_counter  #whatis a smart way to count "edge_count"?
         self.boundary_crossing [node1,self.neighbors_counter[node1], :] = boundary_vector
         self.neighbors_counter [node1] += 1
         
+        if node2 != node1:
         # do the same inverting nodes
-        self.neighbors[node2,self.neighbors_counter[node2]] = node1
-        self.edges_list [node2,self.neighbors_counter[node2]] = self.edges_counter  #whatis a smart way to count "edge_count"?
-        self.boundary_crossing [node2,self.neighbors_counter[node2], :] = -boundary_vector
-        self.neighbors_counter [node2] += 1
+            self.neighbors[node2,self.neighbors_counter[node2]] = node1
+            self.edges_list [node2,self.neighbors_counter[node2]] = self.edges_counter  #whatis a smart way to count "edge_count"?
+            self.boundary_crossing [node2,self.neighbors_counter[node2], :] = -boundary_vector
+            self.neighbors_counter [node2] += 1
+        
         
         # update edges_counter
         self.edges_counter += 1
-        
+    
+
     def get_number_of_neighbors(self,i):
         """ Returns number of neighbors of node i """
         return np.count_nonzero(self.neighbors[i,:] != -1)
         
     def get_neighbors(self,i, padded = True):
-        #returns array of neighbor indices of node i (could be length maxN, padded with -1s, or length actual number)
+        """ Returns array of neighbor indices of node i (could be length maxN, padded with -1s, or length actual number)"""
         neighbors_of_i = self.neighbors[i, :]
         if padded:
             return neighbors_of_i
@@ -54,22 +75,82 @@ class PeriodicNetwork:
             return stripped_neighbors_of_i
              
     def get_neighbor(self,i,n_index):
-        #returns n_index'th neighbor of node i
+        """ Returns n_index'th neighbor of node i """
         return self.neighbors[i, n_index]
     
     def get_edges(self,i):
-        #returns edge corresponding to 
+        """ Returns edge corresponding to """
         return self.edges_list [i, :]
     
     def get_edge(self,node1,node2):
-        #returns edge between two nodes  ##check if edge exists!
+        """ Returns edge between two nodes  ##check if edge exists! """
         return self.edges_list [node1,node2]
     
     def get_boundary_crossing(self,i,n_index):
-        #returns the bc vector of the n_index'th neighbor of node i
+        """ Returns the bc vector of the n_index'th neighbor of node i """
         return self.boundary_crossing [i,n_index, :]
+    
+    def coloring(self, start,  current_color,color):
+        color[start] = current_color
+        for index in range(len(self.neighbors[1])):
+            neigh = self.neighbors[start, index]
+            edge_is_outside = self.bond_is_across_boundary [self.edges_list[start, index]] #check if bond is "inside" 
+            if not edge_is_outside and neigh != -1 and color[neigh] == -1: #empty: not connected 
+                color[neigh] = current_color
+                PeriodicNetwork.coloring(self, neigh,current_color,color)
                 
 
+    def cluster_find(self):  
+        #initiate with first cluster colour
+        current_color = 0
+        # initialise list of star colours (-1 == not coloured)
+        color = -1* np.ones(self.number_of_clusters, dtype = int)
+        for star in range(self.number_of_clusters):
+            if color[star] == -1:
+                start_cluster = star
+                PeriodicNetwork.coloring (self, start_cluster, current_color,color)
+                current_color += 1
+        Ncolors = np.amax(color) + 1
+        return color, Ncolors
+
+    def nodeid_to_clusterid (self,list_colors):
+        print (self.simple_edges_list, self.simple_boundary_crossing)
+        reduced_network = []
+        for i in range(len(self.simple_edges_list)):
+            if self.bond_is_across_boundary[i]:
+                item1 = self.simple_edges_list[i][0]
+                item2 = self.simple_edges_list[i][1]
+                
+                color1 = list_colors[item1]
+                color2 = list_colors[item2]
+                #add_edge here
+                
+                reduced_network.append ([color1, color2, self.simple_boundary_crossing[i][0], self.simple_boundary_crossing[i][1],self.simple_boundary_crossing[i][2]])
+        
+        reduced_network = np.asarray(reduced_network) 
+        reduced_network = rows_uniq_elems(reduced_network)
+        return reduced_network
+    
+    #methods that reduce network
+    def get_reduced_network (self):
+        
+        #colouring algorithm (could be a generic function/method outside) that returns a list_of_colors and Ncolors
+        list_colors, Ncolors = self.cluster_find()
+        print ("color", list_colors, Ncolors)
+        #use list_of_colours and dropped list to turn dropped list into a coloured based list (clst.molid_to_clusterid) - 
+            #this is now the format of the dropped lists used so far in testing 
+        reduced_network_list = self.nodeid_to_clusterid (list_colors)
+        reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list)) 
+        #reduced_network = PeriodicNetwork(Ncolors,len(reduced_network_list))  #
+        print ("reduced network list:", reduced_network_list) 
+        for i in range(len(reduced_network_list)):
+            edge_info = reduced_network_list[i,:]
+            print(edge_info)
+    
+            reduced_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
+        # create new instance of PeriodicNetwork and use add_edges
+        return reduced_network
+        
 
 class LoopFinder:
     def __init__(self,network):
@@ -153,7 +234,13 @@ class LoopFinder:
                     self.loops_list.extend(self.loops_temp)
                     
         return self.loops_list
-    
+
+# remove identical rows > should maybe be done somewhere in the code as well
+def rows_uniq_elems(a):
+    new_array = [tuple(row) for row in a]
+    uniques = np.unique(new_array, axis = 0)
+    return uniques
+
  #loops info should also provide a color for each loop to denote connected components
 # lump before clean would discard that info
 # clean before lump would allow having it
@@ -172,21 +259,40 @@ number_of_clusters = np.amax(dropped_list) +  1
 ## NOTE: at this step, in my previous code, I have a dropped_list that only contains boundary crossing elements
 my_test_network = PeriodicNetwork(number_of_clusters, number_of_clusters)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
 
+
+print(dropped_list)
+dropped_list = rows_uniq_elems(dropped_list)
+print(dropped_list)
 for i in range(len(dropped_list)):
     edge_info = dropped_list[i,:]
     print(edge_info)
+    
     my_test_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
     
-print ("neighbors", my_test_network.neighbors)   
+print ("neighbors", my_test_network.neighbors) 
+print ("boundary crossing ", my_test_network.bond_is_across_boundary)  
 for i in range (len (my_test_network.neighbors)):
     print ("number of neighbours: ", my_test_network.get_number_of_neighbors(i))
     for n_index in range(my_test_network.get_number_of_neighbors(i)):
                 neigh = my_test_network.get_neighbor(i,n_index)
                 edge = my_test_network.get_edge(i,n_index)
                 print ("edge", edge)
-        
-myloops=LoopFinder(my_test_network)
+                
+
+if not my_test_network.crosses_boundaries:
+    print ("Network does not cross periodic boundaries in any direction, therefore it does not percolate")
+    exit()
+
+#the following lines could already be part of get_reduced_network
+if my_test_network.needs_reducing:
+    print ("Reducing network to simpler form...")
+    my_reduced_network = my_test_network.get_reduced_network() #think of a way to return it already in the right format you would get with add_edges
+    myloops=LoopFinder(my_reduced_network)
+else:          
+    myloops=LoopFinder(my_test_network)
 loops=myloops.get_loops()
 
 
-print ("number of loops \n" , np.asarray(loops), " \n independent loops: \n", linearly_independent(loops)[0])
+print ("number of loops \n" , len(linearly_independent(loops)[0]), " \n independent loops: \n", linearly_independent(loops)[0])
+
+

@@ -6,7 +6,6 @@ Created on Fri Apr  3 10:23:55 2020
 @author: wouterel
 """
 import numpy as np
-
    
 
 class testrecursive:
@@ -20,11 +19,17 @@ class testrecursive:
             self.recurse()
             
         
-class periodicnetwork:
+class PeriodicNetwork:
     #stores network structure
     #contains methods like get_something() to provide network info
     def __init__(self,n,maximum_neighbors_per_node):
         #allocate arrays for per-node info
+        
+        #(substitute function neighbour_clusters in clst)
+        self.boundary_crossing = np.zeros((Nclusters,max_links,3), dtype = int)
+        self.neighbors = -1 * np.ones((n,maximum_neighbors_per_node), dtype = int)
+        self.edges_list = -1 * np.ones((n,maximum_neighbors_per_node), dtype = int)
+
         
     def add_edge(self,node1,node2,boundary_vector):
         #add info for this edge
@@ -45,7 +50,7 @@ class periodicnetwork:
         #returns the bc vector of the n_index'th neighbor of node i
         
         
-class loopfinder:
+class LoopFinder:
     def __init__(self,network):
         self.network=network
         #allocate arrays for dfs stuff
@@ -64,9 +69,15 @@ class loopfinder:
 # lump before clean would discard that info
 # clean before lump would allow having it
 
-mynetwork=periodicnetwork(1000,4)
+#testnetwork: import testnetwork from dropped_list_test
+from dropped_list_test import dropped_list
+testnetwork =         
+
+mynetwork=PeriodicNetwork(10,9)
 #now add edges using mynetwork.add_edge(3,5,[1,1,0]) etc (this would happen in the lammps reader code)
-myloops=loopfinder(mynetwork)
+
+
+myloops=LoopFinder(mynetwork)
 loops=myloops.get_loops()
 #myloops.dfs(bla) would give error because it's private?
 
