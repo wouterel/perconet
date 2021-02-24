@@ -248,6 +248,7 @@ def rows_uniq_elems(a):
 def linearly_independent (loops_list):
     loops_list = np.asarray(loops_list)
     print("loops list: ", loops_list)
+    print("rank according to numpy.linalg: {}".format(np.linalg.matrix_rank(loops_list,tol=1e-8)))
     _, inds = sympy.Matrix(loops_list).T.rref()
     Nloops = len(inds)
     
