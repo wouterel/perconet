@@ -1,12 +1,10 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Apr 10 18:04:33 2020
-
-@authors: craffaelli,wouterel
+authors: Chiara Raffaelli, Wouter G. Ellenbroek
+Maintainer: w.g.ellenbroek@tue.nl
 """
 import numpy as np
-from dropped_list_test import dropped_list  
+#from dropped_list_test import dropped_list  
 import sympy
 
 
@@ -209,8 +207,6 @@ class LoopFinder:
                     print("loop!  -> ", self.loops_temp, " loop_timestep: ", loop_timestep, ", crossing sum: ", self.crossing_sum )
         return
         
-    
-    
     def get_loops(self):
         #this is what used to be called launch_def
         #launch dfs and get unclean list
@@ -235,6 +231,27 @@ class LoopFinder:
                     self.loops_list.extend(self.loops_temp)
                     
         return self.loops_list
+    def get_independent_loops(self):
+        """
+        ISSUE: The Matrix sweep used here is only valid if all loops have the same color in a full-graph coloring.
+        FIX PLAN: Decompose the full graph into its connected subgraphs first, then determine loops for each color separately.
+        """
+        #loops info should also provide a color for each loop to denote connected components
+        # lump before clean would discard that info
+        # clean before lump would allow having it
+        myloops_list=self.get_loops()
+        print("loops list: ", myloops_list)
+        print("rank according to numpy.linalg {}".format(np.linalg.matrix_rank(myloops_list,tol=1e-8)))
+        _, inds = sympy.Matrix(myloops_list).T.rref()
+        Nloops = len(inds)
+        print("Found {} loops".format(Nloops))
+        print(list(inds))
+        print(myloops_list)
+        independent_loops = myloops_list[list(inds)] 
+        #print ("independent_loops index and loops: ", independent_loops, inds)
+        return independent_loops, Nloops
+
+
 
 # remove identical rows > should maybe be done somewhere in the code as well
 def rows_uniq_elems(a):
@@ -242,60 +259,4 @@ def rows_uniq_elems(a):
     uniques = np.unique(new_array, axis = 0)
     return uniques
 
- #loops info should also provide a color for each loop to denote connected components
-# lump before clean would discard that info
-# clean before lump would allow having it
-
-def linearly_independent (loops_list):
-    loops_list = np.asarray(loops_list)
-    print("loops list: ", loops_list)
-    print("rank according to numpy.linalg: {}".format(np.linalg.matrix_rank(loops_list,tol=1e-8)))
-    _, inds = sympy.Matrix(loops_list).T.rref()
-    Nloops = len(inds)
-    
-    independent_loops = loops_list[list(inds)] 
-    #print ("independent_loops index and loops: ", independent_loops, inds)
-    return independent_loops, Nloops
-  
-number_of_nodes = np.amax(dropped_list) +  1
-## NOTE: at this step, in my previous code, I have a dropped_list that only contains boundary crossing elements
-my_test_network = PeriodicNetwork(number_of_nodes, number_of_nodes)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
-
-
-print(dropped_list)
-dropped_list = rows_uniq_elems(dropped_list)
-print(dropped_list)
-for i in range(len(dropped_list)):
-    edge_info = dropped_list[i,:]
-    print(edge_info)
-    
-    my_test_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
-    
-print ("neighbors", my_test_network.neighbors) 
-print ("boundary crossing ", my_test_network.bond_is_across_boundary)  
-for i in range (len (my_test_network.neighbors)):
-    print ("number of neighbours: ", my_test_network.get_number_of_neighbors(i))
-    for n_index in range(my_test_network.get_number_of_neighbors(i)):
-                neigh = my_test_network.get_neighbor(i,n_index)
-                edge = my_test_network.get_edge(i,n_index)
-                print ("edge", edge)
-                
-
-if not my_test_network.crosses_boundaries:
-    print ("Network does not cross periodic boundaries in any direction, therefore it does not percolate")
-    exit()
-
-#my_test_network.needs_reducing=0
-#the following lines could already be part of get_reduced_network
-if my_test_network.needs_reducing:
-    print ("Reducing network to simpler form...")
-    my_reduced_network = my_test_network.get_reduced_network() #think of a way to return it already in the right format you would get with add_edges
-    myloops=LoopFinder(my_reduced_network)
-else:          
-    myloops=LoopFinder(my_test_network)
-loops=myloops.get_loops()
-
-
-print ("number of loops \n" , len(linearly_independent(loops)[0]), " \n independent loops: \n", linearly_independent(loops)[0])
-
-
+ 

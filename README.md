@@ -1,5 +1,6 @@
 
-you should have a file localsettings.py which contains a definition of path, e.g.
-path = "/Users/craffaelli/projects/phd/percolation/code/test/C810Cr70S17/"
+This branch contains only the general class-based implementation of the loop-finding-based method to detect percolation in 3-periodic nets, aimed primarily at gelation detection in polymer gels.
+
+The code that does the interfacing with LAMMPS output is available in other branches.
 
 
