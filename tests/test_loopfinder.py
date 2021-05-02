@@ -11,21 +11,18 @@ sys.path.append("..")
 import perconet as pn
 import numpy as np
 from dropped_list_test import dropped_list  
-import sympy
 
   
 number_of_nodes = np.amax(dropped_list) +  1
 ## NOTE: at this step, in my previous code, I have a dropped_list that only contains boundary crossing elements
 my_test_network = pn.PeriodicNetwork(number_of_nodes, number_of_nodes)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
 
-
-print(dropped_list)
+print("#edges including duplicates:",len(dropped_list))
 dropped_list = pn.rows_uniq_elems(dropped_list)
-print(dropped_list)
-for i in range(len(dropped_list)):
-    edge_info = dropped_list[i,:]
+print("#edges after removing duplicates:",len(dropped_list))
+
+for edge_info in dropped_list:
     print(edge_info)
-    
     my_test_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
     
 print ("neighbors", my_test_network.neighbors) 

@@ -4,7 +4,6 @@ authors: Chiara Raffaelli, Wouter G. Ellenbroek
 Maintainer: w.g.ellenbroek@tue.nl
 """
 import numpy as np
-#from dropped_list_test import dropped_list  
 import sympy
 
 
@@ -33,13 +32,12 @@ class PeriodicNetwork:
         if not existing_boundary_crossing_flag:     #Improve way of counting
             if any (boundary_vector):
                 self.bond_is_across_boundary.append(True) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as crossing the boundary
-                #self.bond_is_across_boundary[node1,self.neighbors_counter[node1]] = self.bond_is_across_boundary[node2,self.neighbors_counter[node2]] = True
                 self.crosses_boundaries +=1
             else:
                 self.bond_is_across_boundary.append(False) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as not crossing the boundary
-                #self.bond_is_across_boundary[node1,self.neighbors_counter[node1]] = self.bond_is_across_boundary[node2,self.neighbors_counter[node2]] = False
                 self.needs_reducing +=1
         self.simple_edges_list.append([node1,node2])
+        #this list constructor makes the next line work regardless of whether boundary_vector is passed as a Python list or numpy array
         self.simple_boundary_crossing.append([x for x in boundary_vector])
         
         self.neighbors[node1,self.neighbors_counter[node1]] = node2

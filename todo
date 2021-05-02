@@ -1,0 +1,6 @@
+rewrite rows_uniq_elems and fix the way it is called (why not 1 np.unique call???)
+test data has 1-based node numbers but class assumes 0-based. Seems to work fine because node 0 simply doesn't get used. check.
+bond data in class remains 0-based in this test data (check)
+more clarifications of variable names
+more docstrings
+
