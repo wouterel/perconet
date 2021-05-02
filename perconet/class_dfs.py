@@ -239,7 +239,7 @@ class LoopFinder:
         #loops info should also provide a color for each loop to denote connected components
         # lump before clean would discard that info
         # clean before lump would allow having it
-        myloops_list=self.get_loops()
+        myloops_list=np.asarray(self.get_loops())
         print("loops list: ", myloops_list)
         print("rank according to numpy.linalg {}".format(np.linalg.matrix_rank(myloops_list,tol=1e-8)))
         _, inds = sympy.Matrix(myloops_list).T.rref()
