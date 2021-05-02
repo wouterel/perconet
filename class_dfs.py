@@ -3,7 +3,7 @@
 """
 Created on Fri Apr 10 18:04:33 2020
 
-@author: craffaelli
+@authors: craffaelli,wouterel
 """
 import numpy as np
 from dropped_list_test import dropped_list  
@@ -17,7 +17,7 @@ class PeriodicNetwork:
         #allocate arrays for per-node info
         
         #(substitute function neighbour_clusters in clst)
-        self.number_of_clusters = n
+        self.number_of_nodes = n
         self.boundary_crossing = np.zeros((n,maximum_neighbors_per_node,3), dtype = int)
         self.neighbors = -1 * np.ones((n,maximum_neighbors_per_node), dtype = int)
         self.edges_list = -1 * np.ones((n,maximum_neighbors_per_node), dtype = int)
@@ -96,21 +96,22 @@ class PeriodicNetwork:
             neigh = self.neighbors[start, index]
             edge_is_outside = self.bond_is_across_boundary [self.edges_list[start, index]] #check if bond is "inside" 
             if not edge_is_outside and neigh != -1 and color[neigh] == -1: #empty: not connected 
-                color[neigh] = current_color
-                PeriodicNetwork.coloring(self, neigh,current_color,color)
+                #color[neigh] = current_color #commented this out because the first line of the recursed self.coloring does this anyway
+                self.coloring(neigh,current_color,color)
                 
 
     def cluster_find(self):  
         #initiate with first cluster colour
         current_color = 0
         # initialise list of star colours (-1 == not coloured)
-        color = -1* np.ones(self.number_of_clusters, dtype = int)
-        for star in range(self.number_of_clusters):
+        color = -1* np.ones(self.number_of_nodes, dtype = int)
+        for star in range(self.number_of_nodes):
             if color[star] == -1:
-                start_cluster = star
-                PeriodicNetwork.coloring (self, start_cluster, current_color,color)
+                #start_cluster = star #don't need this because could just use star below
+                self.coloring (star, current_color,color)
                 current_color += 1
         Ncolors = np.amax(color) + 1
+        print("THESE SHOULD BE EQUAL, RIGHT? {} {}".format(Ncolors,current_color))
         return color, Ncolors
 
     def nodeid_to_clusterid (self,list_colors):
@@ -158,7 +159,7 @@ class LoopFinder:
         #allocate arrays and values for dfs stuff
         self.discovery_time_node = 0
         self.discovery_time_edge = 0
-        self.visited_nodes = -1 * np.ones (network.number_of_clusters, dtype = int)
+        self.visited_nodes = -1 * np.ones (network.number_of_nodes, dtype = int)
         self.visited_edges = -1 * np.ones (np.amax(network.edges_list) + 1, dtype = int)
         #self.current_crossing = [0,0,0]
         self.crossing_sum = [[0,0,0]]
@@ -195,7 +196,7 @@ class LoopFinder:
                     self.crossing_sum.append ([xC,yC,zC])
                     #print ("visited nodes: \n",visited_nodes, "\n crossing sum \n", crossing_sum)
                     #loops_temp, discovery_timeC, discovery_timeE = dfs (neigh, discovery_timeC, discovery_timeE, neighbors, visited_nodes, current_crossing, crossing_sum, boundary_crossing, edges_list, visited_edges, loops_temp, Nclusters)
-                    LoopFinder.dfs(self,neigh ) #find right one
+                    self.dfs(neigh ) #find right one
                     #print ("crossing sum now: \n", crossing_sum, "loops temp is:", loops_temp)
                 else: #we found a loop!
                     
@@ -217,7 +218,7 @@ class LoopFinder:
         #returns cleaned-up list of loops
         
         
-        for node in range (self.network.number_of_clusters):
+        for node in range (self.network.number_of_nodes):
             if self.visited_nodes[node] == -1:           #should this be made into a method like is_node_visited (self, node) > return True/False or is this an overkill?
                 print ("new origin of network: ", node)
                 #reset stuff to 0
@@ -226,7 +227,7 @@ class LoopFinder:
                 self.loops_temp = []
                 self.discovery_time_node = 0
                 self.discovery_time_edge = 0
-                LoopFinder.dfs(self, node)
+                self.dfs(node)
                 
                 self.discovery_time_node += 1
                 if self.loops_temp: 
@@ -256,9 +257,9 @@ def linearly_independent (loops_list):
     #print ("independent_loops index and loops: ", independent_loops, inds)
     return independent_loops, Nloops
   
-number_of_clusters = np.amax(dropped_list) +  1
+number_of_nodes = np.amax(dropped_list) +  1
 ## NOTE: at this step, in my previous code, I have a dropped_list that only contains boundary crossing elements
-my_test_network = PeriodicNetwork(number_of_clusters, number_of_clusters)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
+my_test_network = PeriodicNetwork(number_of_nodes, number_of_nodes)  #fix this so you don't take boundary crossings i to account; should be fixed once we turn rev list into object
 
 
 print(dropped_list)
@@ -284,6 +285,7 @@ if not my_test_network.crosses_boundaries:
     print ("Network does not cross periodic boundaries in any direction, therefore it does not percolate")
     exit()
 
+#my_test_network.needs_reducing=0
 #the following lines could already be part of get_reduced_network
 if my_test_network.needs_reducing:
     print ("Reducing network to simpler form...")
