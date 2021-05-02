@@ -3,4 +3,4 @@ test data has 1-based node numbers but class assumes 0-based. Seems to work fine
 bond data in class remains 0-based in this test data (check)
 more clarifications of variable names
 more docstrings
-
+check if Ncolors in cluster_find can indeed be simplified ("THESE SHOULD BE...")
