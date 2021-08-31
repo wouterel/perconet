@@ -28,6 +28,12 @@ class PeriodicNetwork:
         
     def add_edge(self,node1,node2, boundary_vector, existing_boundary_crossing_flag = False): #by default(for now, boundary crossing information is taken from boundary vector)
         """ Adds info for this edge """
+        if(node1>=self.number_of_nodes):
+            print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node1,self.number_of_nodes))
+            return -1
+        if(node2>=self.number_of_nodes):
+            print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node2,self.number_of_nodes))
+            return -1
         print("boundary vector is: ", boundary_vector, self.neighbors_counter)
         if not existing_boundary_crossing_flag:     #Improve way of counting
             if any (boundary_vector):
@@ -78,6 +84,10 @@ class PeriodicNetwork:
         """ Returns edge corresponding to """
         return self.edges_list [i, :]
     
+    def get_number_of_edges(self):
+        """ Returns number of edges """
+        return self.edges_counter
+
     def get_edge(self,node1,node2):
         """ Returns edge between two nodes  ##check if edge exists! """
         return self.edges_list [node1,node2]
@@ -107,7 +117,7 @@ class PeriodicNetwork:
                 self.coloring (star, current_color,color)
                 current_color += 1
         Ncolors = np.amax(color) + 1
-        print("THESE SHOULD BE EQUAL, RIGHT? {} {}".format(Ncolors,current_color))
+        #print("THESE SHOULD BE EQUAL, RIGHT? {} {}".format(Ncolors,current_color))
         return color, Ncolors
 
     def nodeid_to_clusterid (self,list_colors):
@@ -128,6 +138,7 @@ class PeriodicNetwork:
         reduced_network = rows_uniq_elems(reduced_network)
         return reduced_network
     
+
     #methods that reduce network
     def get_reduced_network (self):
         
@@ -137,8 +148,12 @@ class PeriodicNetwork:
         #use list_of_colours and dropped list to turn dropped list into a coloured based list (clst.molid_to_clusterid) - 
             #this is now the format of the dropped lists used so far in testing 
         reduced_network_list = self.nodeid_to_clusterid (list_colors)
-        reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list)) 
+        #next line finds the number of occurrences of the most-occuring number in the first two columns of reduced_network_list
+        largest_functionality = np.max(np.unique(reduced_network_list[:,0:2],return_counts=True)[1])
+        
+        #reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list)) 
         #reduced_network = PeriodicNetwork(Ncolors,len(reduced_network_list))  #
+        reduced_network = PeriodicNetwork(Ncolors,largest_functionality)  #
         print ("reduced network list:", reduced_network_list) 
         for i in range(len(reduced_network_list)):
             edge_info = reduced_network_list[i,:]

@@ -31,7 +31,7 @@ if testnet.needs_reducing:
     print(my_reduced_network)
     myloops=pn.LoopFinder(my_reduced_network)
 else:          
-    myloops=pn.LoopFinder(my_test_network)
+    myloops=pn.LoopFinder(testnet)
 loops=myloops.get_independent_loops()
 
 
