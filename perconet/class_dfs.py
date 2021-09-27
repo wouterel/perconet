@@ -10,7 +10,7 @@ import sympy
 class PeriodicNetwork:
     #stores network structure
     #contains methods like get_something() to provide network info
-    def __init__(self,n,maximum_neighbors_per_node):
+    def __init__(self,n,maximum_neighbors_per_node,verbose=True):
         """Store and analyze the topology of a periodic net.
 
         Periodic nets are graphs embedded in a periodic topology. This class stores the topology of such a graph for
@@ -38,6 +38,7 @@ class PeriodicNetwork:
         self.bond_is_across_boundary = []
         self.needs_reducing = 0
         self.crosses_boundaries = 0 #should I set anything? is there a way to keep ot empty?
+        self.verbose = verbose
         
     def add_edge(self,node1,node2, boundary_vector, existing_boundary_crossing_flag = False): #by default(for now, boundary crossing information is taken from boundary vector)
         """ Add an edge to the periodic network
@@ -63,7 +64,8 @@ class PeriodicNetwork:
         if(node2>=self.number_of_nodes):
             print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node2,self.number_of_nodes))
             return False
-        print("boundary vector is: ", boundary_vector, self.neighbors_counter)
+        if self.verbose:
+            print("boundary vector is: ", boundary_vector, self.neighbors_counter)
         if not existing_boundary_crossing_flag:     #Improve way of counting
             if any (boundary_vector):
                 self.bond_is_across_boundary.append(True) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as crossing the boundary
@@ -150,7 +152,8 @@ class PeriodicNetwork:
         return color, Ncolors
 
     def nodeid_to_clusterid (self,list_colors):
-        print (self.simple_edges_list, self.simple_boundary_crossing)
+        if self.verbose:
+            print (self.simple_edges_list, self.simple_boundary_crossing)
         reduced_network = []
         for i in range(len(self.simple_edges_list)):
             if self.bond_is_across_boundary[i]:
@@ -173,7 +176,8 @@ class PeriodicNetwork:
         
         #colouring algorithm (could be a generic function/method outside) that returns a list_of_colors and Ncolors
         list_colors, Ncolors = self.cluster_find()
-        print ("color", list_colors, Ncolors)
+        if self.verbose:
+            print ("color", list_colors, Ncolors)
         #use list_of_colours and dropped list to turn dropped list into a coloured based list (clst.molid_to_clusterid) - 
             #this is now the format of the dropped lists used so far in testing 
         reduced_network_list = self.nodeid_to_clusterid (list_colors)
@@ -185,11 +189,13 @@ class PeriodicNetwork:
         
         #reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list)) 
         #reduced_network = PeriodicNetwork(Ncolors,len(reduced_network_list))  #
-        reduced_network = PeriodicNetwork(Ncolors,largest_functionality)  #
-        print ("reduced network list:", reduced_network_list) 
+        reduced_network = PeriodicNetwork(Ncolors,largest_functionality,verbose=self.verbose)  #
+        if self.verbose:
+            print ("reduced network list:", reduced_network_list) 
         for i in range(len(reduced_network_list)):
             edge_info = reduced_network_list[i,:]
-            print(edge_info)
+            if self.verbose:
+                print(edge_info)
     
             reduced_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
         # create new instance of PeriodicNetwork and use add_edges
@@ -197,7 +203,7 @@ class PeriodicNetwork:
         
 
 class LoopFinder:
-    def __init__(self,network):
+    def __init__(self,network,verbose=True):
         self.network=network
         #allocate arrays and values for dfs stuff
         self.discovery_time_node = 0
@@ -208,6 +214,7 @@ class LoopFinder:
         self.crossing_sum = [[0,0,0]]
         self.loops_temp = []
         self.loops_list = []
+        self.verbose = verbose
         
     def dfs(self, start):
         #in here, get network info whenever using self.network.get_blabla()
@@ -215,12 +222,14 @@ class LoopFinder:
         self.visited_nodes [start] = self.discovery_time_node
         
         #print ("crossing sum now: \n", self.crossing_sum , "\n visited nodes: ", self.visited_nodes, "\n visited edges: \n", self.visited_edges)
-        print ("number of neighbours: ", self.network.get_number_of_neighbors(start), "start: ", start)
+        if self.verbose:
+            print ("number of neighbours: ", self.network.get_number_of_neighbors(start), "start: ", start)
         
         for n_index in range(self.network.get_number_of_neighbors(start)): #fix this
             neigh = self.network.get_neighbor(start,n_index)
             edge = self.network.get_edge(start,n_index)
-            print ("edge", edge)
+            if self.verbose:
+                print ("edge", edge)
             if edge == -1:
                 break
             
@@ -249,7 +258,8 @@ class LoopFinder:
 
                     self.loops_temp.append (loop.tolist())
                     current_crossing -= self.network.get_boundary_crossing(start, n_index)
-                    print("loop!  -> ", self.loops_temp, " loop_timestep: ", loop_timestep, ", crossing sum: ", self.crossing_sum )
+                    if self.verbose:
+                        print("loop!  -> ", self.loops_temp, " loop_timestep: ", loop_timestep, ", crossing sum: ", self.crossing_sum )
         return
         
     def get_loops(self):
@@ -261,7 +271,8 @@ class LoopFinder:
         
         for node in range (self.network.number_of_nodes):
             if self.visited_nodes[node] == -1:           #should this be made into a method like is_node_visited (self, node) > return True/False or is this an overkill?
-                print ("new origin of network: ", node)
+                if self.verbose:
+                    print ("new origin of network: ", node)
                 #reset stuff to 0
                 self.crossing_sum = [[0,0,0]] #every time I start visiting a new network (that has never been visited before), I set the sum of crossings to 0
                 #self.current_crossing = 0
@@ -290,13 +301,15 @@ class LoopFinder:
         # lump before clean would discard that info
         # clean before lump would allow having it
         myloops_list=np.asarray(self.get_loops())
-        print("loops list: ", myloops_list)
-        print("rank according to numpy.linalg {}".format(np.linalg.matrix_rank(myloops_list,tol=1e-8)))
+        if self.verbose:
+            print("loops list: ", myloops_list)
+            print("rank according to numpy.linalg {}".format(np.linalg.matrix_rank(myloops_list,tol=1e-8)))
         _, inds = sympy.Matrix(myloops_list).T.rref()
         Nloops = len(inds)
-        print("Found {} loops".format(Nloops))
-        print(list(inds))
-        print(myloops_list)
+        if self.verbose:
+            print("Found {} loops".format(Nloops))
+            print(list(inds))
+            print(myloops_list)
         independent_loops = myloops_list[list(inds)] 
         #print ("independent_loops index and loops: ", independent_loops, inds)
         return independent_loops, Nloops

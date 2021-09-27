@@ -7,7 +7,7 @@ import numpy as np
   
 number_of_nodes = 4
 max_coordination = 6
-testnet = pn.PeriodicNetwork(number_of_nodes, max_coordination)
+testnet = pn.PeriodicNetwork(number_of_nodes, max_coordination,verbose=False)
 
 testnet.add_edge(0,1,np.array([0,0,0])) #add a bond between nodes 0 and 1 that crosses no boundary
 testnet.add_edge(2,1,np.array([0,0,0])) #add a bond between nodes 2 and 1 that crosses no boundary
@@ -28,10 +28,10 @@ testnet.add_edge(3,0,np.array([0,-1,0])) #add a bond between nodes 3 and 0 that 
 if testnet.needs_reducing:
     print ("Reducing network to simpler form...")
     my_reduced_network = testnet.get_reduced_network() #think of a way to return it already in the right format you would get with add_edges
-    print(my_reduced_network)
-    myloops=pn.LoopFinder(my_reduced_network)
+    #print(my_reduced_network)
+    myloops=pn.LoopFinder(my_reduced_network,verbose=False)
 else:          
-    myloops=pn.LoopFinder(testnet)
+    myloops=pn.LoopFinder(testnet,verbose=False)
 loops=myloops.get_independent_loops()
 
 
