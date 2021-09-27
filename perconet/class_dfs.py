@@ -11,6 +11,19 @@ class PeriodicNetwork:
     #stores network structure
     #contains methods like get_something() to provide network info
     def __init__(self,n,maximum_neighbors_per_node):
+        """Store and analyze the topology of a periodic net.
+
+        Periodic nets are graphs embedded in a periodic topology. This class stores the topology of such a graph for
+        the case of a threedimensional periodic box (a 3-torus) and allows to determine its percolation properties.
+        The key question to determine percolation is whether the graph contains any loops that are topologically
+        nontrivial in that they allow to travel from a node to itself with a net nonzero number of boundary crossings.
+
+        Args:
+            n (int):
+                The number of nodes of the graph.
+            maximum_neighbors_per_node (int):
+                The largest number of edges coming out of any node.
+        """
         #allocate arrays for per-node info
         
         #(substitute function neighbour_clusters in clst)
@@ -27,13 +40,29 @@ class PeriodicNetwork:
         self.crosses_boundaries = 0 #should I set anything? is there a way to keep ot empty?
         
     def add_edge(self,node1,node2, boundary_vector, existing_boundary_crossing_flag = False): #by default(for now, boundary crossing information is taken from boundary vector)
-        """ Adds info for this edge """
+        """ Add an edge to the periodic network
+        
+        Args:
+            node1 (int):
+                The index of the first node of the pair that defines this edge. Must satisfy (add requirement)
+            node2 (int):
+                The index of the second node of the pair that defines this edge. Must satisfy (add requirement)
+            boundary_vector ((3) int):
+                Vector of three integers (bvx,bvy,bvz) denoting the number of times the edge wraps around the x, y, and z boundaries, respectively.
+                The sign indicates the wrapping direction (e.g. (-1,0,0) indicates that the edge goes around the x-boundary in the negative x-direction
+                when going from node1 to node2.
+            existing_boundary_crossing_flag (bool, optional):
+                Deprecated parameter may be removed in future version.
+
+        Returns:
+            (bool): True if succesful. False if an error occurred.
+        """
         if(node1>=self.number_of_nodes):
             print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node1,self.number_of_nodes))
-            return -1
+            return False
         if(node2>=self.number_of_nodes):
             print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node2,self.number_of_nodes))
-            return -1
+            return False
         print("boundary vector is: ", boundary_vector, self.neighbors_counter)
         if not existing_boundary_crossing_flag:     #Improve way of counting
             if any (boundary_vector):
@@ -61,8 +90,8 @@ class PeriodicNetwork:
         
         # update edges_counter
         self.edges_counter += 1
+        return True
     
-
     def get_number_of_neighbors(self,i):
         """ Returns number of neighbors of node i """
         return np.count_nonzero(self.neighbors[i,:] != -1)
@@ -96,14 +125,14 @@ class PeriodicNetwork:
         """ Returns the bc vector of the n_index'th neighbor of node i """
         return self.boundary_crossing [i,n_index, :]
     
-    def coloring(self, start,  current_color,color):
+    def __coloring(self, start,  current_color,color):
         color[start] = current_color
         for index in range(len(self.neighbors[1])):
             neigh = self.neighbors[start, index]
             edge_is_outside = self.bond_is_across_boundary [self.edges_list[start, index]] #check if bond is "inside" 
             if not edge_is_outside and neigh != -1 and color[neigh] == -1: #empty: not connected 
-                #color[neigh] = current_color #commented this out because the first line of the recursed self.coloring does this anyway
-                self.coloring(neigh,current_color,color)
+                #color[neigh] = current_color #commented this out because the first line of the recursed self.__coloring does this anyway
+                self.__coloring(neigh,current_color,color)
                 
 
     def cluster_find(self):  
@@ -114,7 +143,7 @@ class PeriodicNetwork:
         for star in range(self.number_of_nodes):
             if color[star] == -1:
                 #start_cluster = star #don't need this because could just use star below
-                self.coloring (star, current_color,color)
+                self.__coloring (star, current_color,color)
                 current_color += 1
         Ncolors = np.amax(color) + 1
         #print("THESE SHOULD BE EQUAL, RIGHT? {} {}".format(Ncolors,current_color))
@@ -244,10 +273,15 @@ class LoopFinder:
                     self.loops_list.extend(self.loops_temp)
                     
         return self.loops_list
+
     def get_independent_loops(self):
-        """
+        """ Generate a list of linearly independent topolically nontrivial loops.
+
+        This method performs the main purpose of this class.
+
         ISSUE: The Matrix sweep used here is only valid if all loops have the same color in a full-graph coloring.
         FIX PLAN: Decompose the full graph into its connected subgraphs first, then determine loops for each color separately.
+        NOTE: We should also start using a different term for the clusters as coloring has another meaning in graph theory.
         """
         #loops info should also provide a color for each loop to denote connected components
         # lump before clean would discard that info
