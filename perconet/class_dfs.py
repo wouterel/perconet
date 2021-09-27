@@ -177,6 +177,9 @@ class PeriodicNetwork:
         #use list_of_colours and dropped list to turn dropped list into a coloured based list (clst.molid_to_clusterid) - 
             #this is now the format of the dropped lists used so far in testing 
         reduced_network_list = self.nodeid_to_clusterid (list_colors)
+        if len(reduced_network_list)==0:
+            #return network without any bonds, but with the proper number of nodes
+            return PeriodicNetwork(Ncolors,1)
         #next line finds the number of occurrences of the most-occuring number in the first two columns of reduced_network_list
         largest_functionality = np.max(np.unique(reduced_network_list[:,0:2],return_counts=True)[1])
         
@@ -302,8 +305,12 @@ class LoopFinder:
 
 # remove identical rows > should maybe be done somewhere in the code as well
 def rows_uniq_elems(a):
+    if len(a)==0:
+        return np.array([])
     new_array = [tuple(row) for row in a]
     uniques = np.unique(new_array, axis = 0)
     return uniques
+
+
 
  
