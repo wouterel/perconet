@@ -24,7 +24,7 @@ edgelist_noloops = np.array([
         [45, 22,  0,  0, -1],
         [48, 65,  0,  0,  1],
         [50, 65,  0,  0,  1]])
-
+testcase_noloops = (edgelist_noloops, [[]])
 
 edgelist_example1 = np.array([
         [1, 8,  0, -1,  0],
@@ -41,8 +41,10 @@ edgelist_example1 = np.array([
 # specific cases (see powerpoint)
 edgelist_A = np.array([
         [1, 2,  -1, 0,  0],
-        [2, 3,  1, 0,  0],
-        [3,  1,  1,  0,  0]])
+        [2, 3,  -1, 0,  0],
+        [3,  1,  -1,  0,  0]])
+solution_A = [[-3, 0, 0]]
+testcase_A = (edgelist_A, solution_A)
 
 edgelist_B = np.array([
         [1, 2,  1, 1,  0],
@@ -60,6 +62,8 @@ edgelist_B = np.array([
         [7, 8,  0,  0, -1],
         [8, 5,  0,  -1,  0],
         [8, 9,  0,  0,  1]])
+solution_B = [[2, 2, 0], [1, 3, 0], [0, 1, -1]]
+testcase_B = (edgelist_B, solution_B)
 
 edgelist_C = np.array([
         [1, 2,  1, 1,  0],
@@ -85,6 +89,8 @@ edgelist_C = np.array([
         [6, 3,  0, 0,  0],
         [1, 3,  0, 0,  0],
         [1, 3,  0, 0,  0]])
+solution_C = [[2, 2, 0], [1, 3, 0], [0, 1, -1]]
+testcase_C = (edgelist_C, solution_C)
 
 # keep next line for backwards compatibility
 edgelist = edgelist_C

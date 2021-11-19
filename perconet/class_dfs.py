@@ -40,7 +40,10 @@ class PeriodicNetwork:
         self.needs_reducing = 0
         self.crosses_boundaries = 0  # should I set anything? is there a way to keep ot empty?
         self.verbose = verbose
-        
+
+    def get_number_of_nodes(self):
+        return self.number_of_nodes
+
     def add_edge(self, node1, node2, boundary_vector, existing_boundary_crossing_flag=False):
         # by default(for now, boundary crossing information is taken from boundary vector)
         """
@@ -243,6 +246,7 @@ class PeriodicNetwork:
         Returns:
             :obj:`PeriodicNetwork`: The reduced network    
         """    
+        # to do: make sure self.needs_reducing works and return self if it is False
         #colouring algorithm (could be a generic function/method outside) that returns a list_of_colors and Ncolors
         list_colors, Ncolors = self.cluster_find()
         if self.verbose:
