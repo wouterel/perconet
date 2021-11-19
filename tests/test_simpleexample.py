@@ -2,6 +2,75 @@
 # sys.path.append("..")
 import perconet as pn
 import numpy as np
+import pytest
+
+
+def test_empty():
+    with pytest.raises(ValueError):
+        pn.PeriodicNetwork(0, max_degree=3)
+
+
+def test_maxdegree_single():
+    # note: we save self-bonds only ones but technically the node has degree 2,
+    # so technically perhaps we should have this fail for not satisfying max_degree
+    testnet = pn.PeriodicNetwork(1, max_degree=1)
+    assert testnet.add_edge(0, 0, [0, 0, 0])
+    assert not testnet.add_edge(0, 0, [1, 0, 0])
+
+
+def test_maxdegree_twonodes():
+    testnet = pn.PeriodicNetwork(2, max_degree=2)
+    assert testnet.add_edge(1, 1, [0, 0, 0])
+    assert testnet.add_edge(0, 1, [1, 0, 0])
+    assert not testnet.add_edge(0, 1, [0, 0, 0])
+
+
+def test_loops_singlenode():
+    testnet = pn.PeriodicNetwork(1, max_degree=1)
+    testbc = np.random.randint(-5, 6, 3)
+    # Is it bad form to use random numbers in a test?
+    assert testnet.add_edge(0, 0, testbc)
+    finder = pn.LoopFinder(testnet)
+    loops, n_loops = finder.get_independent_loops()
+    # the algorithm would also be correct if this returned loops = -testbc
+    # at the time of writing of this test it always gives loops = testbc though
+    assert n_loops == 1
+    assert np.all(loops[0] == testbc) or np.all(loops[0] == -testbc)
+
+
+def test_loops_reversewrap():
+    testnet = pn.PeriodicNetwork(2, max_degree=2)
+    assert testnet.add_edge(1, 0, [2, 0, 0])
+    assert testnet.add_edge(0, 1, [-2, 0, 0])
+    finder = pn.LoopFinder(testnet)
+    loops, n_loops = finder.get_independent_loops()
+    assert n_loops == 0
+
+
+def test_loops_twonodes():
+    testnet = pn.PeriodicNetwork(2, max_degree=3)
+    assert testnet.add_edge(1, 0, [2, 0, 0])
+    assert testnet.add_edge(0, 1, [0, 1, 0])
+    finder = pn.LoopFinder(testnet)
+    loops, n_loops = finder.get_independent_loops()
+    # the algorithm would also be correct if this returned loops = -testbc
+    # at the time of writing of this test it always gives loops = testbc though
+    assert n_loops == 1
+    checkloop = np.asarray([-2, -1, 0])
+    assert np.all(loops[0] == checkloop) or np.all(loops[0] == -checkloop)
+    assert testnet.add_edge(0, 1, [0, 0, 0])
+    finder = pn.LoopFinder(testnet)
+    loops, n_loops = finder.get_independent_loops()
+    assert n_loops == 2
+    l0 = loops[0]
+    l1 = loops[1]
+    # check if the two loops have no z-component
+    assert l0[2] == 0
+    assert l1[2] == 0
+    # now check if the two loops span the xy plane
+    assert l0[0]*l1[1] != l0[1]*l1[0]
+    # During the writing of this test I found that adding an edge to a network after
+    # initializing the loopfinder will not update the loopfinder's network!
 
 
 def test_simple():

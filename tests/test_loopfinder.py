@@ -6,13 +6,15 @@ Created on Fri Apr 10 18:04:33 2020
 @authors: craffaelli,wouterel
 """
 
-# import sys
+import sys
 # sys.path.append("..")
 # removed this because within the poetry setup it is not necessary
 import perconet as pn
 import numpy as np
-from dropped_list_test import dropped_list
+sys.path.append("tests")
+from networkdata_testing import edgelist
 
+dropped_list = edgelist  # use old ropped_list" terminology below
 # dropped_list has description of boundary-crossing bonds in a reduced network
 # these fully characterize the network
 # deduce number of nodes from contents of dropped_list

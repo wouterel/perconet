@@ -23,16 +23,17 @@ class PeriodicNetwork:
         max_degree (int):
             The largest number of edges coming out of any node.
     """
-    def __init__(self, n, max_degree, verbose=True):
-        # allocate arrays for per-node info
-
-        # (substitute function neighbour_clusters in clst)
+    def __init__(self, n: int, max_degree=6, verbose=True):
+        if n < 1:
+            raise ValueError("Number of nodes must be a positive integer.")
         self.number_of_nodes = n
+        self.max_degree = max_degree
+        # allocate arrays for per-node info
         self.boundary_crossing = np.zeros((n, max_degree, 3), dtype=int)
         self.neighbors = -1 * np.ones((n, max_degree), dtype=int)
         self.edges_list = -1 * np.ones((n, max_degree), dtype=int)
         self.neighbors_counter = np.zeros(n, dtype=int)
-        self.edges_counter = 0  # keeps track of the total number of edges while building the edges list
+        self.edges_counter = 0  # keeps track of the total number of edges while building edge list
         self.simple_edges_list = []  # is this duplicate info?
         self.simple_boundary_crossing = []
         self.bond_is_across_boundary = []
@@ -66,6 +67,12 @@ class PeriodicNetwork:
         if(node2>=self.number_of_nodes):
             print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node2,self.number_of_nodes))
             return False
+        if(self.neighbors_counter[node1] == self.max_degree):
+            print(f"Cannot add edge: node {node1} already has {self.max_degree} edges")
+            return False
+        if(self.neighbors_counter[node2] == self.max_degree):
+            print(f"Cannot add edge: node {node2} already has {self.max_degree} edges")
+            return False
         if self.verbose:
             print("boundary vector is: ", boundary_vector, self.neighbors_counter)
         if not existing_boundary_crossing_flag:     #Improve way of counting
@@ -88,7 +95,7 @@ class PeriodicNetwork:
         # do the same inverting nodes
             self.neighbors[node2,self.neighbors_counter[node2]] = node1
             self.edges_list [node2,self.neighbors_counter[node2]] = self.edges_counter  #whatis a smart way to count "edge_count"?
-            self.boundary_crossing [node2,self.neighbors_counter[node2], :] = -boundary_vector
+            self.boundary_crossing [node2,self.neighbors_counter[node2], :] = -np.asarray(boundary_vector)  # fix this
             self.neighbors_counter [node2] += 1
         
         
