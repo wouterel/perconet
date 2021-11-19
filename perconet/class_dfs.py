@@ -129,25 +129,25 @@ class PeriodicNetwork:
         if not padded:
             stripped_neighbors_of_i = neighbors_of_i [neighbors_of_i != -1]
             return stripped_neighbors_of_i
-             
+
     def get_neighbor(self,i,n_index):
         """
         Get n_index'th neighbor of node i
-        
+
         Args:
             i (int): node number
             n_index (int): the position of the neighbor in the list returned by get_neighbors()
 
         Returns:
             int: The index of that neighbor (the value of get_neighbors(i)[n_index])
-        
+
         """
         return self.neighbors[i, n_index]
-    
+
     def get_edges(self,i):
         """ Returns edge corresponding to """
         return self.edges_list [i, :]
-    
+
     def get_number_of_edges(self):
         """ Returns number of edges """
         return self.edges_counter
@@ -155,7 +155,7 @@ class PeriodicNetwork:
     def get_edge(self,node1,k):
         """
         Get the edge number of the k'th edge of node1.
-        
+
         Args:
             node1 (int): node number
             k (int): the position of the edge in the list of edges of node1.
