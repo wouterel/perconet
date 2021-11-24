@@ -89,7 +89,7 @@ def test_duplicate_removal_C():
 
 
 def oldstuff():
-    dropped_list = ndata.edgelist  # use old ropped_list" terminology below
+    dropped_list = ndata.edgelist  # use old "dropped_list" terminology below
     # dropped_list has description of boundary-crossing bonds in a reduced network
     # these fully characterize the network
     # deduce number of nodes from contents of dropped_list
