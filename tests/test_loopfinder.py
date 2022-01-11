@@ -1,36 +1,18 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 """
 Created on Fri Apr 10 18:04:33 2020
 
 @authors: craffaelli,wouterel
 """
 
-import sys
+# import sys
 # sys.path.append("..")
 # removed this because within the poetry setup it is not necessary
 import perconet as pn
 import numpy as np
-sys.path.append("tests")
+# sys.path.append("tests")
 import networkdata_testing as ndata
-
-
-def initialize_test(bondlist):
-    assert len(bondlist) > 0
-    for bond in bondlist:
-        assert len(bond) == 5
-    bonds = np.asarray(bondlist).astype(int)
-    nodelist_bonds = bonds[:, 0:2]
-    n_nodes = nodelist_bonds.max()+1
-    assert n_nodes < 100000
-    assert n_nodes > 0
-    nodenum, coordination = np.unique(nodelist_bonds, return_counts=True)
-    max_coord = coordination[np.argmax(coordination)]
-    assert max_coord > 0
-    network = pn.PeriodicNetwork(n_nodes, max_degree=max_coord, verbose=False)
-    for bond in bondlist:
-        assert network.add_edge(bond[0], bond[1], bond[2:])
-    return network
+from pn_test_helpers import initialize_test
 
 
 def test_loops():
@@ -75,7 +57,7 @@ def test_reduction_C():
 def test_duplicate_removal_C():
     edgelist, solution = ndata.testcase_C
     assert len(edgelist) == 23
-    edgelist = pn.rows_uniq_elems(edgelist)
+    edgelist = np.unique(edgelist, axis=0)  # this used to test an exposed routine, now it just tests a numpy feature
     assert len(edgelist) == 22
     network = initialize_test(edgelist)
     assert network.get_number_of_nodes() == 10

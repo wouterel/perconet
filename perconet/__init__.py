@@ -17,6 +17,6 @@ the nodes, as long as the boundary-crossing properties of the edges are
 prescribed correctly.
 """
 
-from perconet.class_dfs import PeriodicNetwork, LoopFinder, rows_uniq_elems
+from perconet.class_dfs import PeriodicNetwork, LoopFinder
 
-__all__ = ["PeriodicNetwork", "LoopFinder", "rows_uniq_elems"]
+__all__ = ["PeriodicNetwork", "LoopFinder"]

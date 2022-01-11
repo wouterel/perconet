@@ -44,7 +44,7 @@ class PeriodicNetwork:
     def get_number_of_nodes(self):
         return self.number_of_nodes
 
-    def add_edge(self, node1, node2, boundary_vector, existing_boundary_crossing_flag=False):
+    def add_edge(self, node1: int, node2: int, boundary_vector, existing_boundary_crossing_flag=False):
         # by default(for now, boundary crossing information is taken from boundary vector)
         """
         Add an edge to the periodic network
@@ -119,7 +119,7 @@ class PeriodicNetwork:
 
         return np.count_nonzero(self.neighbors[i,:] != -1)
         
-    def get_neighbors(self,i, padded = True):
+    def get_neighbors(self, i, padded = True):
         """
         Get array of neighbor indices of node i.
         
@@ -234,7 +234,7 @@ class PeriodicNetwork:
                 reduced_network.append ([color1, color2, self.simple_boundary_crossing[i][0], self.simple_boundary_crossing[i][1],self.simple_boundary_crossing[i][2]])
         
         reduced_network = np.asarray(reduced_network) 
-        reduced_network = rows_uniq_elems(reduced_network)
+        reduced_network = np.unique(reduced_network, axis=0)
         return reduced_network
     
 
@@ -401,13 +401,14 @@ class LoopFinder:
 
 
 
-# remove identical rows > should maybe be done somewhere in the code as well
-def rows_uniq_elems(a):
-    if len(a)==0:
-        return np.array([])
-    new_array = [tuple(row) for row in a]
-    uniques = np.unique(new_array, axis = 0)
-    return uniques
+# # remove identical rows > should maybe be done somewhere in the code as well
+# def rows_uniq_elems(a):
+#     if len(a)==0:
+#         return np.array([])
+#     new_array = [tuple(row) for row in a]
+#     uniques = np.unique(new_array, axis = 0)
+#     #uniques = np.unique(a, axis = 0)
+#     return uniques
 
 
 
