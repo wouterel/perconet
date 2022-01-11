@@ -1,3 +1,9 @@
+# This file is part of the PercoNet package
+# (c) 2022 Eindhoven University of Technology
+# Released under the BSD 3-clause license
+# See LICENSE file for details
+# Authors: Chiara Raffaelli, Wouter G. Ellenbroek
+# Contributing: https://github.com/wouterel/perconet
 """
 Perconet is a package for analyzing the percolation properties of periodic
 nets.

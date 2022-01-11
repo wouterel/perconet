@@ -45,31 +45,33 @@ class PeriodicNetwork:
     def get_number_of_nodes(self):
         return self.number_of_nodes
 
-    def add_edge(self, node1: int, node2: int, boundary_vector, existing_boundary_crossing_flag=False):
+    def add_edge(self, node1: int, node2: int, boundary_vector):
         # by default(for now, boundary crossing information is taken from boundary vector)
         """
         Add an edge to the periodic network
-        
+
         Args:
             node1 (int):
-                The index of the first node of the pair that defines this edge. Must satisfy (add requirement)
+                The index of the first node of the pair that defines this edge.
+                Must satisfy 0 <= node1 < number_of_nodes (index is 0-based)
             node2 (int):
-                The index of the second node of the pair that defines this edge. Must satisfy (add requirement)
+                The index of the second node of the pair that defines this edge.
+                Must satisfy 0 <= node2 < number_of_nodes (index is 0-based)
             boundary_vector ((3) int):
-                Vector of three integers (bvx,bvy,bvz) denoting the number of times the edge wraps around the x, y, and z boundaries, respectively.
-                The sign indicates the wrapping direction (e.g. (-1,0,0) indicates that the edge goes around the x-boundary in the negative x-direction
+                Vector of three integers (bvx,bvy,bvz) denoting the number of times the edge
+                wraps around the x, y, and z boundaries, respectively.
+                The sign indicates the wrapping direction (e.g. (-1,0,0) indicates that the edge
+                goes around the x-boundary in the negative x-direction
                 when going from node1 to node2.
-            existing_boundary_crossing_flag (bool, optional):
-                Deprecated parameter may be removed in future version.
 
         Returns:
             (bool): True if succesful. False if an error occurred.
         """
-        if(node1>=self.number_of_nodes):
-            print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node1,self.number_of_nodes))
+        if(node1 >= self.number_of_nodes):
+            print(f"Error in add_edge(): node {node1} does not exist (N = {self.number_of_nodes})")
             return False
-        if(node2>=self.number_of_nodes):
-            print("Error in add_edge(): node {} does not exist (number of nodes = {})".format(node2,self.number_of_nodes))
+        if(node2 >= self.number_of_nodes):
+            print(f"Error in add_edge(): node {node2} does not exist (N = {self.number_of_nodes})")
             return False
         if(self.neighbors_counter[node1] == self.max_degree):
             print(f"Cannot add edge: node {node1} already has {self.max_degree} edges")
@@ -79,38 +81,44 @@ class PeriodicNetwork:
             return False
         if self.verbose:
             print("boundary vector is: ", boundary_vector, self.neighbors_counter)
-        if not existing_boundary_crossing_flag:     #Improve way of counting
-            if any (boundary_vector):
-                self.bond_is_across_boundary.append(True) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as crossing the boundary
-                self.crosses_boundaries +=1
-            else:
-                self.bond_is_across_boundary.append(False) #bond/edge at the same index as "bond_counter" (see edges_list) is flagged as not crossing the boundary
-                self.needs_reducing +=1
-        self.simple_edges_list.append([node1,node2])
-        #this list constructor makes the next line work regardless of whether boundary_vector is passed as a Python list or numpy array
+
+        # Now we will add the bond data by appending to the various lists
+        # Convert to dataclass in the future to be more robust
+        if any(boundary_vector):
+            # This bond crosses the boundary
+            self.bond_is_across_boundary.append(True)
+            self.crosses_boundaries += 1
+        else:
+            # This bond does not cross the boundary
+            self.bond_is_across_boundary.append(False)
+            self.needs_reducing += 1
+        self.simple_edges_list.append([node1, node2])
+        # this list constructor makes the next line work regardless of whether boundary_vector
+        # is passed as a Python list or numpy array.
         self.simple_boundary_crossing.append([x for x in boundary_vector])
-        
-        self.neighbors[node1,self.neighbors_counter[node1]] = node2
-        self.edges_list [node1,self.neighbors_counter[node1]] = self.edges_counter  #whatis a smart way to count "edge_count"?
-        self.boundary_crossing [node1,self.neighbors_counter[node1], :] = boundary_vector
-        self.neighbors_counter [node1] += 1
-        
+
+        # Next, add bond data to some node-based lists
+        self.neighbors[node1, self.neighbors_counter[node1]] = node2
+        self.edges_list[node1, self.neighbors_counter[node1]] = self.edges_counter
+        self.boundary_crossing[node1, self.neighbors_counter[node1], :] = boundary_vector
+        self.neighbors_counter[node1] += 1
+
         if node2 != node1:
-        # do the same inverting nodes
-            self.neighbors[node2,self.neighbors_counter[node2]] = node1
-            self.edges_list [node2,self.neighbors_counter[node2]] = self.edges_counter  #whatis a smart way to count "edge_count"?
-            self.boundary_crossing [node2,self.neighbors_counter[node2], :] = -np.asarray(boundary_vector)  # fix this
-            self.neighbors_counter [node2] += 1
-        
-        
+            # do the same inverting nodes
+            self.neighbors[node2, self.neighbors_counter[node2]] = node1
+            self.edges_list[node2, self.neighbors_counter[node2]] = self.edges_counter
+            self.boundary_crossing[node2, self.neighbors_counter[node2], :] = \
+                -np.asarray(boundary_vector)  # fix this
+            self.neighbors_counter[node2] += 1
+
         # update edges_counter
         self.edges_counter += 1
         return True
-    
-    def get_number_of_neighbors(self,i):
+
+    def get_number_of_neighbors(self, i):
         """
         Get the number of bonds of node i
-        
+
         Args:
             i (int): node number
 
@@ -118,12 +126,12 @@ class PeriodicNetwork:
             int: The number of edges (bonds) involving node i
         """
 
-        return np.count_nonzero(self.neighbors[i,:] != -1)
-        
-    def get_neighbors(self, i, padded = True):
+        return np.count_nonzero(self.neighbors[i, :] != -1)
+
+    def get_neighbors(self, i, padded=True):
         """
         Get array of neighbor indices of node i.
-        
+
         Args:
             i (int): node number
             padded (bool, optional): If true (the default), the list will be padded
@@ -138,10 +146,10 @@ class PeriodicNetwork:
         if padded:
             return neighbors_of_i
         if not padded:
-            stripped_neighbors_of_i = neighbors_of_i [neighbors_of_i != -1]
+            stripped_neighbors_of_i = neighbors_of_i[neighbors_of_i != -1]
             return stripped_neighbors_of_i
 
-    def get_neighbor(self,i,n_index):
+    def get_neighbor(self, i, n_index):
         """
         Get n_index'th neighbor of node i
 
@@ -155,15 +163,15 @@ class PeriodicNetwork:
         """
         return self.neighbors[i, n_index]
 
-    def get_edges(self,i):
+    def get_edges(self, i):
         """ Returns edge corresponding to """
-        return self.edges_list [i, :]
+        return self.edges_list[i, :]
 
     def get_number_of_edges(self):
         """ Returns number of edges """
         return self.edges_counter
 
-    def get_edge(self,node1,k):
+    def get_edge(self, node1, k):
         """
         Get the edge number of the k'th edge of node1.
 
@@ -174,103 +182,112 @@ class PeriodicNetwork:
         Returns:
             int: The edge number of that edge (to be used as an index in arrays of edge properties)
         """
-        return self.edges_list [node1,k]
-    
-    def get_boundary_crossing(self,i,n_index):
-        """ 
+        return self.edges_list[node1, k]
+
+    def get_boundary_crossing(self, i, n_index):
+        """
         Get the boundary crossing vector of the n_index'th neighbor of node i.
-        
+
         Args:
             i (int): node number
             n_index (int): index of neighbor in neighbor list of i
-        
+
         Returns:
-            int[3]: The vector of integers [bx, by, bz] denoting the number of times each boundary is crossed by this edge.
+            int[3]: The vector of integers [bx, by, bz] denoting the number of
+            times each boundary is crossed by this edge.
         """
-        return self.boundary_crossing [i,n_index, :]
-    
-    def __coloring(self, start,  current_color,color):
+        return self.boundary_crossing[i, n_index, :]
+
+    def __coloring(self, start,  current_color, color):
         color[start] = current_color
         for index in range(len(self.neighbors[1])):
             neigh = self.neighbors[start, index]
-            edge_is_outside = self.bond_is_across_boundary [self.edges_list[start, index]] #check if bond is "inside" 
-            if not edge_is_outside and neigh != -1 and color[neigh] == -1: #empty: not connected 
-                #color[neigh] = current_color #commented this out because the first line of the recursed self.__coloring does this anyway
-                self.__coloring(neigh,current_color,color)
-                
+            edge_is_outside = self.bond_is_across_boundary[self.edges_list[start, index]]
+            if not edge_is_outside and neigh != -1 and color[neigh] == -1:  # empty: not connected
+                self.__coloring(neigh, current_color, color)
 
     def cluster_find(self):
         """
         Obtain the cluster decomposition of the network (using only internal bonds).
 
         Returns:
-            Tuple[:obj:`List` of int, int]: A list with the cluster ID of each node and the number of clusters
+            Tuple[:obj:`List` of int, int]: A list with the cluster ID of each node
+            and the number of clusters
         """
-        #initiate with first cluster colour
+        # initiate with first cluster colour
         current_color = 0
         # initialise list of star colours (-1 == not coloured)
-        color = -1* np.ones(self.number_of_nodes, dtype = int)
+        color = -1 * np.ones(self.number_of_nodes, dtype=int)
         for star in range(self.number_of_nodes):
             if color[star] == -1:
-                #start_cluster = star #don't need this because could just use star below
-                self.__coloring (star, current_color,color)
+                # start_cluster = star #don't need this because could just use star below
+                self.__coloring(star, current_color, color)
                 current_color += 1
         Ncolors = np.amax(color) + 1
-        #print("THESE SHOULD BE EQUAL, RIGHT? {} {}".format(Ncolors,current_color))
         return color, Ncolors
 
-    def nodeid_to_clusterid (self,list_colors):
+    def nodeid_to_clusterid(self, list_colors):
         if self.verbose:
-            print (self.simple_edges_list, self.simple_boundary_crossing)
+            print(self.simple_edges_list, self.simple_boundary_crossing)
         reduced_network = []
         for i in range(len(self.simple_edges_list)):
             if self.bond_is_across_boundary[i]:
                 item1 = self.simple_edges_list[i][0]
                 item2 = self.simple_edges_list[i][1]
-                
+
                 color1 = list_colors[item1]
                 color2 = list_colors[item2]
-                #add_edge here
-                
-                reduced_network.append ([color1, color2, self.simple_boundary_crossing[i][0], self.simple_boundary_crossing[i][1],self.simple_boundary_crossing[i][2]])
-        
-        reduced_network = np.asarray(reduced_network) 
+                # add_edge here
+
+                reduced_network.append([color1, color2,
+                                        self.simple_boundary_crossing[i][0],
+                                        self.simple_boundary_crossing[i][1],
+                                        self.simple_boundary_crossing[i][2]])
+
+        reduced_network = np.asarray(reduced_network)
         reduced_network = np.unique(reduced_network, axis=0)
         return reduced_network
-    
 
-    #methods that reduce network
-    def get_reduced_network (self):
+    # methods that reduce network
+    def get_reduced_network(self):
         """
-        Generate the reduced network with identical boundary crossing properties but no internal edges.
+        Generate the reduced network with identical boundary crossing properties
+        but no internal edges.
 
         Returns:
-            :obj:`PeriodicNetwork`: The reduced network    
-        """    
+            :obj:`PeriodicNetwork`: The reduced network
+        """
         # to do: make sure self.needs_reducing works and return self if it is False
-        #colouring algorithm (could be a generic function/method outside) that returns a list_of_colors and Ncolors
+        # colouring algorithm (could be a generic function/method outside)
+        # that returns a list_of_colors and Ncolors
+
+        # First find a cluster decomposition of the network excluding the boundary-crossing edges
         list_colors, Ncolors = self.cluster_find()
         if self.verbose:
-            print ("color", list_colors, Ncolors)
-        #use list_of_colours and dropped list to turn dropped list into a coloured based list (clst.molid_to_clusterid) - 
-            #this is now the format of the dropped lists used so far in testing 
-        reduced_network_list = self.nodeid_to_clusterid (list_colors)
-        if len(reduced_network_list)==0:
-            #return network without any bonds, but with the proper number of nodes
-            return PeriodicNetwork(Ncolors,1)
-        #next line finds the number of occurrences of the most-occuring number in the first two columns of reduced_network_list
-        largest_functionality = np.max(np.unique(reduced_network_list[:,0:2],return_counts=True)[1])
-        
-        #reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list)) 
-        #reduced_network = PeriodicNetwork(Ncolors,len(reduced_network_list))  #
-        reduced_network = PeriodicNetwork(Ncolors,largest_functionality,verbose=self.verbose)  #
+            print("color", list_colors, Ncolors)
+
+        # each cluster in this decomposition becomes a node in the reduced network
+        # the boundary crossing edges will be put back in, now with cluster IDs
+        # rather than node IDs to indicate what they connect
+        reduced_network_list = self.nodeid_to_clusterid(list_colors)
+        if len(reduced_network_list) == 0:
+            # return network without any bonds, but with the proper number of nodes
+            return PeriodicNetwork(Ncolors, 1)
+        # next line finds the number of occurrences of the most-occuring number in the
+        # first two columns of reduced_network_list
+        largest_functionality = np.max(np.unique(reduced_network_list[:, 0:2],
+                                                 return_counts=True)[1])
+
+        # reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list))
+        # reduced_network = PeriodicNetwork(Ncolors,len(reduced_network_list))  #
+        reduced_network = PeriodicNetwork(Ncolors, largest_functionality, verbose=self.verbose)
         if self.verbose:
-            print ("reduced network list:", reduced_network_list) 
+            print("reduced network list:", reduced_network_list)
         for i in range(len(reduced_network_list)):
-            edge_info = reduced_network_list[i,:]
+            edge_info = reduced_network_list[i, :]
             if self.verbose:
                 print(edge_info)
-    
+
             reduced_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
         # create new instance of PeriodicNetwork and use add_edges
         return reduced_network
