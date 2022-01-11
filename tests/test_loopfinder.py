@@ -57,7 +57,8 @@ def test_reduction_C():
 def test_duplicate_removal_C():
     edgelist, solution = ndata.testcase_C
     assert len(edgelist) == 23
-    edgelist = np.unique(edgelist, axis=0)  # this used to test an exposed routine, now it just tests a numpy feature
+    edgelist = np.unique(edgelist, axis=0)
+    # this used to test an exposed routine, now it just tests a numpy feature
     assert len(edgelist) == 22
     network = initialize_test(edgelist)
     assert network.get_number_of_nodes() == 10
@@ -91,7 +92,7 @@ def oldstuff():
     for i in range(len(my_test_network.neighbors)):
         print("number of neighbours: ", my_test_network.get_number_of_neighbors(i))
         for n_index in range(my_test_network.get_number_of_neighbors(i)):
-            neigh = my_test_network.get_neighbor(i, n_index)
+            # neigh = my_test_network.get_neighbor(i, n_index)
             edge = my_test_network.get_edge(i, n_index)
             print("edge", edge)
 
