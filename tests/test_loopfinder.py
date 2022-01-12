@@ -24,20 +24,38 @@ def test_loops():
         network = initialize_test(edgelist)
         loopfinder = pn.LoopFinder(network, verbose=False)
         loops, n_loops = loopfinder.get_independent_loops()
-        print(loops)
-        print(net)
+        # print(loops)
+        # print(net)
         if len(solution) == 0:  # solution = []
             assert n_loops == 0
         elif len(solution) == 1 and len(solution[0]) == 0:  # solution = [[]]
             assert n_loops == 0
+        elif len(solution) == 1 and len(solution[0]) == 3:  # one loop
+            assert n_loops == 1
+            # the single loop must be the same one as in the solution
+            # there are edge cases in which this goes wrong
+            # but fixing that requires abandoning sympy
+            # and rewriting the independence check from scratch
+            assert np.all(np.asarray(solution) == np.asarray(loops)) or \
+                   np.all(np.asarray(solution) == -np.asarray(loops))
+        elif len(solution) == 2:
+            # to do: check independence using only integer arithmetic
+            assert n_loops == 2
+            sol = np.asarray(solution)
+            test = np.asarray(loops)
+            perp_sol = np.cross(sol[0], sol[1])
+            perp_test = np.cross(test[0], test[1])
+            # now check if the vector perpendicular to the plane spanned by the loops
+            # is perpendicular for the correct solution and the test solution
+            assert np.dot(perp_sol, perp_test)**2 == \
+                   np.dot(perp_sol, perp_sol) * np.dot(perp_test, perp_test)
         else:
-            assert n_loops > 0
-            # next assert is too strict.
-            # Future optimizations could change the precise list of loops
-            # without changing their meaning (e.g. as linear combinations)
-            # Fix later.
-            assert np.all(np.asarray(solution) == np.asarray(loops))
-    # assert False
+            assert n_loops == 3
+            # used to have an assert here that compared the entire lists
+            # but that is not correct.
+            # more precise checks would require abondoning sympy
+            # and rewriting the independence check from scratch
+            # assert np.all(np.asarray(solution) == np.asarray(loops))
 
 
 def test_reduction_C():
@@ -112,3 +130,7 @@ def oldstuff():
     loops, n_loops = myloops.get_independent_loops()
 
     print("number of loops \n", n_loops, " \n independent loops: \n", loops)
+
+
+if __name__ == "__main__":
+    test_loops()

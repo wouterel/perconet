@@ -38,7 +38,7 @@ class PeriodicNetwork:
         self.simple_edges_list = []  # is this duplicate info?
         self.simple_boundary_crossing = []
         self.bond_is_across_boundary = []
-        self.needs_reducing = 0
+        self.n_internal_edges = 0
         self.crosses_boundaries = 0  # should I set anything? is there a way to keep ot empty?
         self.verbose = verbose
 
@@ -91,7 +91,7 @@ class PeriodicNetwork:
         else:
             # This bond does not cross the boundary
             self.bond_is_across_boundary.append(False)
-            self.needs_reducing += 1
+            self.n_internal_edges += 1
         self.simple_edges_list.append([node1, node2])
         # this list constructor makes the next line work regardless of whether boundary_vector
         # is passed as a Python list or numpy array.
@@ -198,15 +198,37 @@ class PeriodicNetwork:
         """
         return self.boundary_crossing[i, n_index, :]
 
-    def __coloring(self, start,  current_color, color):
-        color[start] = current_color
-        for index in range(len(self.neighbors[1])):
+    def needs_reducing(self):
+        """
+        Determine if the network could be reduced using internal connected component decomposition.
+
+        LoopFinder will perform this reduction automatically so there will not usually be a need
+        for the user to call this function themselves.
+
+        Returns:
+            bool: True if the network has any edges that do not cross any boundary.
+        """
+        return (self.n_internal_edges > 0)
+
+    def __label_component(self, start,  current_label, labels):
+        """
+        Label the entire connected component to which node start belongs with label current_label.
+
+        Args:
+            start (int): node number
+            current_label (int): the label for this connected component
+            labels (:obj:`numpy.ndarray`): numpy array (dtype=int) containing the label
+                of each node/vertex. This array is updated by this recursive routine.
+        """
+        labels[start] = current_label
+        # assert len(self.neighbors[1]) == self.max_degree  # using this to simplify next line
+        for index in range(self.max_degree):
             neigh = self.neighbors[start, index]
             edge_is_outside = self.bond_is_across_boundary[self.edges_list[start, index]]
-            if not edge_is_outside and neigh != -1 and color[neigh] == -1:  # empty: not connected
-                self.__coloring(neigh, current_color, color)
+            if not edge_is_outside and neigh != -1 and labels[neigh] == -1:  # empty: not connected
+                self.__label_component(neigh, current_label, labels)
 
-    def cluster_find(self):
+    def decompose(self):
         """
         Obtain the cluster decomposition of the network (using only internal bonds).
 
@@ -214,19 +236,21 @@ class PeriodicNetwork:
             Tuple[:obj:`List` of int, int]: A list with the cluster ID of each node
             and the number of clusters
         """
-        # initiate with first cluster colour
-        current_color = 0
-        # initialise list of star colours (-1 == not coloured)
-        color = -1 * np.ones(self.number_of_nodes, dtype=int)
-        for star in range(self.number_of_nodes):
-            if color[star] == -1:
-                # start_cluster = star #don't need this because could just use star below
-                self.__coloring(star, current_color, color)
-                current_color += 1
-        Ncolors = np.amax(color) + 1
-        return color, Ncolors
+        # initiate with first cluster label
+        current_label = 0
+        # initialise list of labels (-1 == unlabeled)
+        labels = -1 * np.ones(self.number_of_nodes, dtype=int)
+        for node in range(self.number_of_nodes):
+            if labels[node] == -1:
+                # this node is still unlabeled. Start recursion to label its connected component.
+                self.__label_component(node, current_label, labels)
+                current_label += 1
+        n_labels = np.amax(labels) + 1
+        # At this point, all elements of labels are >=0 and < n_labels
+        # assert np.amin(labels) == 0
+        return labels, n_labels
 
-    def nodeid_to_clusterid(self, list_colors):
+    def nodeid_to_clusterid(self, clusterlabels):
         if self.verbose:
             print(self.simple_edges_list, self.simple_boundary_crossing)
         reduced_network = []
@@ -235,11 +259,11 @@ class PeriodicNetwork:
                 item1 = self.simple_edges_list[i][0]
                 item2 = self.simple_edges_list[i][1]
 
-                color1 = list_colors[item1]
-                color2 = list_colors[item2]
+                label1 = clusterlabels[item1]
+                label2 = clusterlabels[item2]
                 # add_edge here
 
-                reduced_network.append([color1, color2,
+                reduced_network.append([label1, label2,
                                         self.simple_boundary_crossing[i][0],
                                         self.simple_boundary_crossing[i][1],
                                         self.simple_boundary_crossing[i][2]])
@@ -257,30 +281,32 @@ class PeriodicNetwork:
         Returns:
             :obj:`PeriodicNetwork`: The reduced network
         """
-        # to do: make sure self.needs_reducing works and return self if it is False
-        # colouring algorithm (could be a generic function/method outside)
-        # that returns a list_of_colors and Ncolors
+        if self.n_internal_edges == 0:
+            # The network has no edges that do not cross the boundary.
+            # Therefore the result of reducing would be identical to the current network.
+            # Returning original network.
+            return self
 
         # First find a cluster decomposition of the network excluding the boundary-crossing edges
-        list_colors, Ncolors = self.cluster_find()
+        clusterlabels, n_labels = self.decompose()
         if self.verbose:
-            print("color", list_colors, Ncolors)
+            print("labels:", clusterlabels, n_labels)
 
         # each cluster in this decomposition becomes a node in the reduced network
         # the boundary crossing edges will be put back in, now with cluster IDs
         # rather than node IDs to indicate what they connect
-        reduced_network_list = self.nodeid_to_clusterid(list_colors)
+        reduced_network_list = self.nodeid_to_clusterid(clusterlabels)
         if len(reduced_network_list) == 0:
             # return network without any bonds, but with the proper number of nodes
-            return PeriodicNetwork(Ncolors, 1)
+            return PeriodicNetwork(n_labels, 1)
         # next line finds the number of occurrences of the most-occuring number in the
         # first two columns of reduced_network_list
         largest_functionality = np.max(np.unique(reduced_network_list[:, 0:2],
                                                  return_counts=True)[1])
 
         # reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list))
-        # reduced_network = PeriodicNetwork(Ncolors,len(reduced_network_list))  #
-        reduced_network = PeriodicNetwork(Ncolors, largest_functionality, verbose=self.verbose)
+        # reduced_network = PeriodicNetwork(n_labels,len(reduced_network_list))  #
+        reduced_network = PeriodicNetwork(n_labels, largest_functionality, verbose=self.verbose)
         if self.verbose:
             print("reduced network list:", reduced_network_list)
         for i in range(len(reduced_network_list)):

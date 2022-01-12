@@ -92,5 +92,14 @@ edgelist_C = np.array([
 solution_C = [[2, 2, 0], [1, 3, 0], [0, 1, -1]]
 testcase_C = (edgelist_C, solution_C)
 
+edgelist_D = np.array([
+        [1, 2,  1, 0, 0],
+        [2, 3,  0, 0, 0],
+        [3, 2,  0, 0, 1],
+        [2, 1,  0, 1, 0]])
+solution_D = [[1, 1, 1], [1, 1, 0]]
+testcase_D = (edgelist_D, solution_D)
+
+
 # keep next line for backwards compatibility
 edgelist = edgelist_C

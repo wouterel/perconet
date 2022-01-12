@@ -94,6 +94,11 @@ class LoopFinder:
                 with elements of the form [Bx, By, Bz] and the length of that list.
         """
 
+        original_network = self.network
+        # print(f"needs red: {self.network.needs_reducing()}")
+        self.network = self.network.get_reduced_network()
+        # print(f"Number of nodes after reduction: {network.get_number_of_nodes()}.")
+
         for node in range(self.network.number_of_nodes):
             # If this node has not been visited, this is a new cluster and we start a fresh search
             if self.visited_nodes[node] == -1:
@@ -110,6 +115,7 @@ class LoopFinder:
                 self.discovery_time_node += 1
                 if self.loops_temp:
                     self.loops_list.extend(self.loops_temp)
+        self.network = original_network  # this means no more extracting info after this point
         return self.loops_list
 
     def get_independent_loops(self):
@@ -126,10 +132,11 @@ class LoopFinder:
         of the same cluster (this will almost always be the case in the large N limit)
         FIX PLAN: Decompose the full graph into its connected subgraphs first.
         """
-        # loops info should also provide a color for each loop to denote connected components
+        # loops info should include a cluster label for each loop to denote connected components
         # lump before clean would discard that info
         # clean before lump would allow having it
         myloops_list = np.asarray(self.get_loops())
+        # print(myloops_list)
         if self.verbose:
             print("loops list: ", myloops_list)
             print(f"rank according to numpy.linalg {np.linalg.matrix_rank(myloops_list, tol=1e-8)}")
