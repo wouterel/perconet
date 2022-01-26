@@ -254,21 +254,16 @@ class PeriodicNetwork:
         if self.verbose:
             print(self.simple_edges_list, self.simple_boundary_crossing)
         reduced_network = []
-        for i in range(len(self.simple_edges_list)):
-            if self.bond_is_across_boundary[i]:
-                item1 = self.simple_edges_list[i][0]
-                item2 = self.simple_edges_list[i][1]
-
-                label1 = clusterlabels[item1]
-                label2 = clusterlabels[item2]
-                # add_edge here
-
-                reduced_network.append([label1, label2,
-                                        self.simple_boundary_crossing[i][0],
-                                        self.simple_boundary_crossing[i][1],
-                                        self.simple_boundary_crossing[i][2]])
-
+        for edge, newnodes in enumerate(self.simple_edges_list):
+            if self.bond_is_across_boundary[edge]:
+                connected_labels = clusterlabels[newnodes].tolist()
+                # parameters are now in two python lists which we can concatenate
+                # using the addition operator
+                edgedata = connected_labels + self.simple_boundary_crossing[edge]
+                reduced_network.append(edgedata)
         reduced_network = np.asarray(reduced_network)
+        # The main reason to collect the edge data in a 5-column numpy array is
+        # that we can now use np.unique to get rid of duplicate edges
         reduced_network = np.unique(reduced_network, axis=0)
         return reduced_network
 
@@ -296,6 +291,8 @@ class PeriodicNetwork:
         # the boundary crossing edges will be put back in, now with cluster IDs
         # rather than node IDs to indicate what they connect
         reduced_network_list = self.nodeid_to_clusterid(clusterlabels)
+        if self.verbose:
+            print("reduced network list:", reduced_network_list)
         if len(reduced_network_list) == 0:
             # return network without any bonds, but with the proper number of nodes
             return PeriodicNetwork(n_labels, 1)
@@ -303,17 +300,11 @@ class PeriodicNetwork:
         # first two columns of reduced_network_list
         largest_functionality = np.max(np.unique(reduced_network_list[:, 0:2],
                                                  return_counts=True)[1])
-
-        # reduced_network = PeriodicNetwork(len(reduced_network_list), len(reduced_network_list))
-        # reduced_network = PeriodicNetwork(n_labels,len(reduced_network_list))  #
+        # construct new PeriodicNetwork object with n_labels nodes
         reduced_network = PeriodicNetwork(n_labels, largest_functionality, verbose=self.verbose)
-        if self.verbose:
-            print("reduced network list:", reduced_network_list)
-        for i in range(len(reduced_network_list)):
-            edge_info = reduced_network_list[i, :]
+        # add the edges of the reduced network
+        for edge_info in reduced_network_list:
             if self.verbose:
                 print(edge_info)
-
             reduced_network.add_edge(edge_info[0], edge_info[1], edge_info[2:])
-        # create new instance of PeriodicNetwork and use add_edges
         return reduced_network
