@@ -7,6 +7,7 @@
 
 import numpy as np
 
+#TO DO: Make the documentation reflect that the package works for n-tori, not just 3-tori
 
 class PeriodicNetwork:
     """Store and analyze the topology of a periodic net.

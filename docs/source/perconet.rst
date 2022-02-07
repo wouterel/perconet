@@ -1,13 +1,17 @@
-perconet package
-==================
+package contents
+================
 
-Module contents
+Being a small package, **perconet** exposes only two classes.
+
+PeriodicNetwork
 ---------------
 
-.. automodule:: perconet
+.. autoclass:: perconet.PeriodicNetwork
    :members:
-   :undoc-members:
-   :show-inheritance:
 
+LoopFinder
+----------
 
-
+.. autoclass:: perconet.LoopFinder
+   :members:
+   
