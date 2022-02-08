@@ -30,7 +30,7 @@ def test_loops_singlenode():
     testbc = np.random.randint(-5, 6, 3)
     # Is it bad form to use random numbers in a test?
     assert testnet.add_edge(0, 0, testbc)
-    finder = pn.LoopFinder(testnet)
+    finder = pn.LoopFinder(testnet, verbose=False)
     loops, n_loops = finder.get_independent_loops()
     # the algorithm would also be correct if this returned loops = -testbc
     # at the time of writing of this test it always gives loops = testbc though
@@ -42,7 +42,7 @@ def test_loops_reversewrap():
     testnet = pn.PeriodicNetwork(2, max_degree=2)
     assert testnet.add_edge(1, 0, [2, 0, 0])
     assert testnet.add_edge(0, 1, [-2, 0, 0])
-    finder = pn.LoopFinder(testnet)
+    finder = pn.LoopFinder(testnet, verbose=False)
     loops, n_loops = finder.get_independent_loops()
     assert n_loops == 0
 

@@ -6,7 +6,8 @@
 # Contributing: https://github.com/wouterel/perconet
 
 import numpy as np
-import sympy
+# import sympy
+import perconet.looptools as looptools
 
 
 class LoopFinder:
@@ -99,6 +100,7 @@ class LoopFinder:
         self.network = self.network.get_reduced_network()
         # print(f"Number of nodes after reduction: {network.get_number_of_nodes()}.")
 
+        # starting_nodes_with_loops = 0
         for node in range(self.network.number_of_nodes):
             # If this node has not been visited, this is a new cluster and we start a fresh search
             if self.visited_nodes[node] == -1:
@@ -114,8 +116,11 @@ class LoopFinder:
 
                 self.discovery_time_node += 1
                 if self.loops_temp:
+                    # starting_nodes_with_loops += 1
                     self.loops_list.extend(self.loops_temp)
         self.network = original_network  # this means no more extracting info after this point
+        # print(f"Loops found from {starting_nodes_with_loops} starting points")
+        # assert starting_nodes_with_loops < 2
         return self.loops_list
 
     def get_independent_loops(self):
@@ -127,25 +132,73 @@ class LoopFinder:
                 (list, int) A tuple containing a list of the independent loops,
                 with elements of the form [Bx, By, Bz] and the length of that list.
         """
-        """
-        ISSUE: The Matrix sweep used here is only valid if all loops are part
-        of the same cluster (this will almost always be the case in the large N limit)
-        FIX PLAN: Decompose the full graph into its connected subgraphs first.
-        """
         # loops info should include a cluster label for each loop to denote connected components
         # lump before clean would discard that info
         # clean before lump would allow having it
+        # Note that we have not yet encountered data for which this difference mattered
+        # and if all one wants to know is the weak directions of a material it
+        # is irrelevant anyway
         myloops_list = np.asarray(self.get_loops())
-        # print(myloops_list)
+        if len(myloops_list) == 0:
+            # No loops found
+            return myloops_list, 0
+        if np.count_nonzero(myloops_list) == 0:
+            # If only topologically trivial loops we treat this as no loops
+            return np.asarray([]), 0
         if self.verbose:
             print("loops list: ", myloops_list)
             print(f"rank according to numpy.linalg {np.linalg.matrix_rank(myloops_list, tol=1e-8)}")
+        independent_loops, _, Nloops = looptools.integer_gaussian_elimination(myloops_list)
+        # the ige method has left the 0-rows in there so need to remove them now
+        independent_loops = independent_loops[:Nloops]
+
+        if self.verbose:
+            print(f"Found {Nloops} loops")
+            print(independent_loops)
+        return independent_loops, Nloops
+
+    def _compare_independence_methods(self):
+        """
+        Checks if ranks obtained with three methods agree.
+        """
+        import sympy  # put this here so sympy will be a development-only dependency
+        myloops_list = np.asarray(self.get_loops())
+        if len(myloops_list) == 0:
+            # No loops found
+            return myloops_list, 0
+        if np.count_nonzero(myloops_list) == 0:
+            # If only topologically trivial loops we treat this as no loops
+            return np.asarray([]), 0
+        nprank = np.linalg.matrix_rank(myloops_list, tol=1e-8)
+        if self.verbose:
+            print("loops list: ", myloops_list)
+            print(f"rank according to numpy.linalg {nprank}")
+
         _, inds = sympy.Matrix(myloops_list).T.rref()
         Nloops = len(inds)
+        assert Nloops == nprank
         if self.verbose:
             print(f"Found {Nloops} loops")
             print(list(inds))
             print(myloops_list)
         independent_loops = myloops_list[list(inds)]
-        # print ("independent_loops index and loops: ", independent_loops, inds)
+
+        my_ind_loops, _, my_Nloops = looptools.integer_gaussian_elimination(myloops_list)
+        # the ige method has left the 0-rows in there so need to remove them now
+        my_ind_loops = my_ind_loops[:my_Nloops]
+        assert my_Nloops == Nloops
+        # print("independent loops according to sympy:")
+        # print(independent_loops)
+        # print("independent loops according to ige:")
+        # print(my_ind_loops)
+        # print("independent_loops index and loops: ", independent_loops, inds)
+        # assert not break_here
+        assert my_Nloops > 0
+        if my_Nloops == 1:
+            assert np.all(my_ind_loops == independent_loops)
+        # next 4 lines could give false alarms but worked fine on existing test data
+        elif my_Nloops == 2:
+            print(my_ind_loops)
+            for loop in my_ind_loops.tolist():
+                assert loop in independent_loops.tolist()
         return independent_loops, Nloops

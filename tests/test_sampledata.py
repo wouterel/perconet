@@ -14,6 +14,7 @@ def single_test_set(set_id):
         network = initialize_test(bondlist)
         loopfinder = pn.LoopFinder(network, verbose=False)
         _, n_loops = loopfinder.get_independent_loops()
+        # _, n_loops = loopfinder._compare_independence_methods()
         assert n_loops == nloops[ifile]
         print(n_loops)
 
