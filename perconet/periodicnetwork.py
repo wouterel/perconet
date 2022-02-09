@@ -25,8 +25,10 @@ class PeriodicNetwork:
             The number of nodes of the graph.
         max_degree (int):
             The largest number of edges coming out of any node.
+        verbose (bool, optional):
+            Print debugging information to stdout. Defaults to False.
     """
-    def __init__(self, n: int, max_degree=6, verbose=True):
+    def __init__(self, n: int, max_degree=6, verbose=False):
         if n < 1:
             raise ValueError("Number of nodes must be a positive integer.")
         self.number_of_nodes = n
@@ -36,30 +38,31 @@ class PeriodicNetwork:
         self.neighbors = -1 * np.ones((n, max_degree), dtype=int)
         self.edges_list = -1 * np.ones((n, max_degree), dtype=int)
         self.neighbors_counter = np.zeros(n, dtype=int)
-        self.edges_counter = 0  # keeps track of the total number of edges while building edge list
+        self.n_total_edges = 0  # keeps track of the total number of edges while building edge list
         self.simple_edges_list = []  # is this duplicate info?
         self.simple_boundary_crossing = []
         self.bond_is_across_boundary = []
         self.n_internal_edges = 0
-        self.crosses_boundaries = 0  # should I set anything? is there a way to keep ot empty?
+        self.n_boundary_edges = 0
         self.verbose = verbose
 
     def get_number_of_nodes(self):
         return self.number_of_nodes
 
     def add_edge(self, node1: int, node2: int, boundary_vector):
-        # by default(for now, boundary crossing information is taken from boundary vector)
         """
         Add an edge to the periodic network
 
         Args:
             node1 (int):
                 The index of the first node of the pair that defines this edge.
-                Must satisfy 0 <= node1 < number_of_nodes (index is 0-based)
+                Valid values range from 0 up to (but not including) the number of nodes of
+                the network (node indices are 0-based).
             node2 (int):
                 The index of the second node of the pair that defines this edge.
-                Must satisfy 0 <= node2 < number_of_nodes (index is 0-based)
-            boundary_vector ((3) int):
+                Valid values range from 0 up to (but not including) the number of nodes of
+                the network (node indices are 0-based).
+            boundary_vector (:obj:`List` of int):
                 Vector of three integers (bvx,bvy,bvz) denoting the number of times the edge
                 wraps around the x, y, and z boundaries, respectively.
                 The sign indicates the wrapping direction (e.g. (-1,0,0) indicates that the edge
@@ -89,7 +92,7 @@ class PeriodicNetwork:
         if any(boundary_vector):
             # This bond crosses the boundary
             self.bond_is_across_boundary.append(True)
-            self.crosses_boundaries += 1
+            self.n_boundary_edges += 1
         else:
             # This bond does not cross the boundary
             self.bond_is_across_boundary.append(False)
@@ -101,41 +104,41 @@ class PeriodicNetwork:
 
         # Next, add bond data to some node-based lists
         self.neighbors[node1, self.neighbors_counter[node1]] = node2
-        self.edges_list[node1, self.neighbors_counter[node1]] = self.edges_counter
+        self.edges_list[node1, self.neighbors_counter[node1]] = self.n_total_edges
         self.boundary_crossing[node1, self.neighbors_counter[node1], :] = boundary_vector
         self.neighbors_counter[node1] += 1
 
         if node2 != node1:
             # do the same inverting nodes
             self.neighbors[node2, self.neighbors_counter[node2]] = node1
-            self.edges_list[node2, self.neighbors_counter[node2]] = self.edges_counter
+            self.edges_list[node2, self.neighbors_counter[node2]] = self.n_total_edges
             self.boundary_crossing[node2, self.neighbors_counter[node2], :] = \
                 -np.asarray(boundary_vector)  # fix this
             self.neighbors_counter[node2] += 1
 
-        # update edges_counter
-        self.edges_counter += 1
+        # update n_total_edges
+        self.n_total_edges += 1
         return True
 
-    def get_number_of_neighbors(self, i):
+    def get_number_of_neighbors(self, node):
         """
-        Get the number of bonds of node i
+        Get the number of bonds of node.
 
         Args:
-            i (int): node number
+            node (int): node number
 
         Returns:
-            int: The number of edges (bonds) involving node i
+            int: The number of edges (bonds) involving this node
         """
 
-        return np.count_nonzero(self.neighbors[i, :] != -1)
+        return np.count_nonzero(self.neighbors[node, :] != -1)
 
-    def get_neighbors(self, i, padded=True):
+    def get_neighbors(self, node, padded=True):
         """
-        Get array of neighbor indices of node i.
+        Get array of neighbor indices of node.
 
         Args:
-            i (int): node number
+            node (int): node number
             padded (bool, optional): If true (the default), the list will be padded
                 with values -1 to the value of maximum_neighbors_per_node passed to
                 the constructor. Otherwise the length will be the number of neighbors of i.
@@ -144,61 +147,96 @@ class PeriodicNetwork:
             :obj:`list` of int: list of neighbors (along bonds) of node i
 
         """
-        neighbors_of_i = self.neighbors[i, :]
+        neighbors_of_node = self.neighbors[node, :]
         if padded:
-            return neighbors_of_i
-        if not padded:
-            stripped_neighbors_of_i = neighbors_of_i[neighbors_of_i != -1]
+            return neighbors_of_node
+        else:
+            stripped_neighbors_of_i = neighbors_of_node[neighbors_of_node != -1]
             return stripped_neighbors_of_i
 
-    def get_neighbor(self, i, n_index):
+    def get_neighbor(self, node, nb_index):
         """
-        Get n_index'th neighbor of node i
+        Get nb_index'th neighbor of node.
 
         Args:
-            i (int): node number
-            n_index (int): the position of the neighbor in the list returned by get_neighbors()
+            node (int): node number
+            nb_index (int): index of neighbor in neighbor list of node
 
         Returns:
-            int: The index of that neighbor (the value of get_neighbors(i)[n_index])
+            int:
+                The index of that neighbor (the value of `get_neighbors(i)[nb_index])`.
+                A return value of -1 indicates that the edge does not exist.
 
         """
-        return self.neighbors[i, n_index]
+        return self.neighbors[node, nb_index]
 
-    def get_edges(self, i):
-        """ Returns edge corresponding to """
-        return self.edges_list[i, :]
+    def get_edges(self, node, padded=True):
+        """
+        Get the list of edges linking to node.
+
+        Args:
+            node (int): The index of the node for which to return the edge list
+            padded (bool, optional): If true (the default), the list will be padded
+                with values -1 to the value of maximum_neighbors_per_node passed to
+                the constructor. Otherwise the length will be the number of neighbors of node.
+
+        Returns:
+            :obj:`numpy.ndarray`:
+            Numpy array (dtype=int) containing the edge numbers of all edges involving node.
+
+        """
+        edges_of_node = self.edges_list[node, :]
+        if padded:
+            return edges_of_node
+        return edges_of_node[edges_of_node != -1]
 
     def get_number_of_edges(self):
-        """ Returns number of edges """
-        return self.edges_counter
-
-    def get_edge(self, node1, k):
         """
-        Get the edge number of the k'th edge of node1.
-
-        Args:
-            node1 (int): node number
-            k (int): the position of the edge in the list of edges of node1.
+        Get total number of edges in network.
 
         Returns:
-            int: The edge number of that edge (to be used as an index in arrays of edge properties)
+            int: Total number of edges (bonds) in the network
         """
-        return self.edges_list[node1, k]
+        return self.n_total_edges
 
-    def get_boundary_crossing(self, i, n_index):
+    def get_edge(self, node, nb_index):
         """
-        Get the boundary crossing vector of the n_index'th neighbor of node i.
+        Get the edge number of the nb_index'th edge of node.
 
         Args:
-            i (int): node number
-            n_index (int): index of neighbor in neighbor list of i
+            node (int): node number
+            nb_index (int): index of neighbor in neighbor list of node
+
+        Returns:
+            int:
+                The edge number of that edge (to be used as an index in arrays of edge properties).
+                A return value of -1 indicates that the edge does not exist.
+
+        """
+        return self.edges_list[node, nb_index]
+
+    def get_boundary_crossing(self, node, nb_index):
+        """
+        Get the boundary crossing vector of the nb_index'th neighbor of node.
+
+        Args:
+            node (int): node number
+            nb_index (int): index of neighbor in neighbor list of node
 
         Returns:
             int[3]: The vector of integers [bx, by, bz] denoting the number of
             times each boundary is crossed by this edge.
         """
-        return self.boundary_crossing[i, n_index, :]
+        return self.boundary_crossing[node, nb_index, :]
+
+    def crosses_boundaries(self):
+        """
+        Check if the network contains any edges that cross a boundary.
+
+        Returns:
+            bool: True if the network has any edges that cross a boundary.
+        """
+        return (self.n_boundary_edges > 0)
 
     def needs_reducing(self):
         """
@@ -212,7 +250,7 @@ class PeriodicNetwork:
         """
         return (self.n_internal_edges > 0)
 
-    def __label_component(self, start,  current_label, labels):
+    def __label_component(self, start,  current_label, labels, internal_only=True):
         """
         Label the entire connected component to which node start belongs with label current_label.
 
@@ -226,13 +264,19 @@ class PeriodicNetwork:
         # assert len(self.neighbors[1]) == self.max_degree  # using this to simplify next line
         for index in range(self.max_degree):
             neigh = self.neighbors[start, index]
-            edge_is_outside = self.bond_is_across_boundary[self.edges_list[start, index]]
-            if not edge_is_outside and neigh != -1 and labels[neigh] == -1:  # empty: not connected
-                self.__label_component(neigh, current_label, labels)
+            if neigh != -1 and labels[neigh] == -1:
+                if not (internal_only and
+                        self.bond_is_across_boundary[self.edges_list[start, index]]):
+                    self.__label_component(neigh, current_label, labels)
 
-    def decompose(self):
+    def decompose(self, internal_only=True):
         """
         Obtain the cluster decomposition of the network (using only internal bonds).
+
+        Args:
+            internal_only (bool, optional): Defaults to True.
+                If true, use only bonds that do not cross
+                any boundary for the cluster decomposition.
 
         Returns:
             Tuple[:obj:`List` of int, int]: A list with the cluster ID of each node
@@ -245,7 +289,7 @@ class PeriodicNetwork:
         for node in range(self.number_of_nodes):
             if labels[node] == -1:
                 # this node is still unlabeled. Start recursion to label its connected component.
-                self.__label_component(node, current_label, labels)
+                self.__label_component(node, current_label, labels, internal_only=internal_only)
                 current_label += 1
         n_labels = np.amax(labels) + 1
         # At this point, all elements of labels are >=0 and < n_labels

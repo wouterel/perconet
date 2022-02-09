@@ -33,19 +33,19 @@ class LoopFinder:
         self.verbose = verbose
 
     def __dfs(self, start):
-        # in here, get network info whenever using self.network.get_blabla()
+        # in here, get network info whenever using self.reduced_network.get_blabla()
         # this function can be private (not callable from the outside)
         self.visited_nodes[start] = self.discovery_time_node
 
         # print ("crossing sum now: \n", self.crossing_sum , "\n visited nodes: ",
         #         self.visited_nodes, "\n visited edges: \n", self.visited_edges)
         if self.verbose:
-            print("number of neighbours: ", self.network.get_number_of_neighbors(start),
+            print("number of neighbours: ", self.reduced_network.get_number_of_neighbors(start),
                   "start: ", start)
 
-        for n_index in range(self.network.get_number_of_neighbors(start)):  # fix this
-            neigh = self.network.get_neighbor(start, n_index)
-            edge = self.network.get_edge(start, n_index)
+        for n_index in range(self.reduced_network.get_number_of_neighbors(start)):  # fix this
+            neigh = self.reduced_network.get_neighbor(start, n_index)
+            edge = self.reduced_network.get_edge(start, n_index)
             if self.verbose:
                 print("edge", edge)
             if edge == -1:
@@ -58,10 +58,10 @@ class LoopFinder:
                 timestep = self.visited_nodes[start]
 
                 current_crossing = self.crossing_sum[timestep] + \
-                    self.network.get_boundary_crossing(start, n_index)
+                    self.reduced_network.get_boundary_crossing(start, n_index)
                 xC, yC, zC = current_crossing[:]
-                # print(f"Current crossing is {self.network.get_boundary_crossing(start, n_index)}")
-                # print(f"    Total crossing for {start}-{neigh} (index: {n_index}): {[xC,yC,zC]}.")
+                # print(f"this bond: {self.reduced_network.get_boundary_crossing(start, n_index)}")
+                # print(f"    Total for {start}-{neigh} (index: {n_index}): {[xC,yC,zC]}.")
 
                 if self.visited_nodes[neigh] == -1:
                     self.discovery_time_node += 1
@@ -79,7 +79,7 @@ class LoopFinder:
                     loop = current_crossing - self.crossing_sum[loop_timestep]
 
                     self.loops_temp.append(loop.tolist())
-                    current_crossing -= self.network.get_boundary_crossing(start, n_index)
+                    current_crossing -= self.reduced_network.get_boundary_crossing(start, n_index)
                     if self.verbose:
                         print("loop!  -> ", self.loops_temp, " loop_timestep: ", loop_timestep,
                               ", crossing sum: ", self.crossing_sum)
@@ -87,7 +87,14 @@ class LoopFinder:
 
     def get_loops(self):
         """
-        Generate a raw list of loops. Most use cases will require get_independent_loops instead.
+        Generate a raw list of boundary-crossing loops.
+        Most use cases will require :obj:`get_independent_loops()` instead.
+
+        If the network contains any internal bonds, this routine performs a cluster reduction of
+        the network before it starts, but this does not alter the :obj:`PeriodicNetwork` object
+        that was used to construct
+        this :obj:`LoopFinder` instance. If the reduced network is needed elsewhere, use
+        :obj:`PeriodicNetwork.get_reduced_network()`.
 
         Returns:
             Tuple[:obj:`List` of :obj:`List` of int, int]:
@@ -95,13 +102,15 @@ class LoopFinder:
                 with elements of the form [Bx, By, Bz] and the length of that list.
         """
 
-        original_network = self.network
-        # print(f"needs red: {self.network.needs_reducing()}")
-        self.network = self.network.get_reduced_network()
+        if self.network.n_boundary_edges == 0:
+            # no edges around boundaries. return empty list immediately
+            return []
+
+        self.reduced_network = self.network.get_reduced_network()
         # print(f"Number of nodes after reduction: {network.get_number_of_nodes()}.")
 
         # starting_nodes_with_loops = 0
-        for node in range(self.network.number_of_nodes):
+        for node in range(self.reduced_network.number_of_nodes):
             # If this node has not been visited, this is a new cluster and we start a fresh search
             if self.visited_nodes[node] == -1:
                 if self.verbose:
@@ -118,7 +127,6 @@ class LoopFinder:
                 if self.loops_temp:
                     # starting_nodes_with_loops += 1
                     self.loops_list.extend(self.loops_temp)
-        self.network = original_network  # this means no more extracting info after this point
         # print(f"Loops found from {starting_nodes_with_loops} starting points")
         # assert starting_nodes_with_loops < 2
         return self.loops_list

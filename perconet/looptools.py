@@ -2,10 +2,25 @@ import numpy as np
 
 
 def swaprows(a: np.ndarray, i1: int, i2: int):
+    """
+    Swap (in-place) rows i1 and i2 in twodimensional :obj:`ndarray` a.
+
+    Will throw an error if called on an array with fewer than 2 dimensions.
+    """
     a[(i1, i2), :] = a[(i2, i1), :]
 
 
 def integer_gaussian_elimination(input: np.ndarray):
+    """
+    Construct a row echelon form of the input matrix using only row swapping and
+    addition of integer multiples of other rows to rows.
+
+    Returns:
+        Tuple[:obj:`np.ndarray`, :obj:`np.ndarray`, int]:
+            Tuple (r, u, rank) with r representing the row echelon form of input,
+            u representing the orthogonal transformation matrix and rank the
+            number of nonzero rows of r.
+    """
     a = input.copy()
     (m, n) = a.shape  # number of rows, columns
 
