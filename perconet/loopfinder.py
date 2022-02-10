@@ -22,15 +22,9 @@ class LoopFinder:
     """
     def __init__(self, network, verbose=True):
         self.network = network
-        # allocate arrays and values for dfs stuff
-        self.discovery_time_node = 0
-        self.discovery_time_edge = 0
-        self.visited_nodes = -1 * np.ones(network.number_of_nodes, dtype=int)
-        self.visited_edges = -1 * np.ones(np.amax(network.edges_list) + 1, dtype=int)
-        self.crossing_sum = [[0, 0, 0]]
-        self.loops_temp = []
-        self.loops_list = []
         self.verbose = verbose
+        # moved all dfs-specific variable initializations to get_loops()
+        # to make sure that they get re-initialized if get_loops is called more than once
 
     def __dfs(self, start):
         # in here, get network info whenever using self.reduced_network.get_blabla()
@@ -59,13 +53,12 @@ class LoopFinder:
 
                 current_crossing = self.crossing_sum[timestep] + \
                     self.reduced_network.get_boundary_crossing(start, n_index)
-                xC, yC, zC = current_crossing[:]
                 # print(f"this bond: {self.reduced_network.get_boundary_crossing(start, n_index)}")
-                # print(f"    Total for {start}-{neigh} (index: {n_index}): {[xC,yC,zC]}.")
+                # print(f"    Total for {start}-{neigh} (index: {n_index}): {current_crossing}.")
 
                 if self.visited_nodes[neigh] == -1:
                     self.discovery_time_node += 1
-                    self.crossing_sum.append([xC, yC, zC])
+                    self.crossing_sum.append(current_crossing)
                     # print ("visited nodes: \n",visited_nodes, "\n crossing sum \n", crossing_sum)
                     # loops_temp, discovery_timeC, discovery_timeE = dfs (neigh, discovery_timeC,
                     #  discovery_timeE, neighbors, visited_nodes, current_crossing, crossing_sum,
@@ -107,6 +100,12 @@ class LoopFinder:
             return []
 
         self.reduced_network = self.network.get_reduced_network()
+        dim = self.reduced_network.get_dimension()
+        self.discovery_time_node = 0
+        self.discovery_time_edge = 0
+        self.visited_nodes = -1 * np.ones(self.reduced_network.number_of_nodes, dtype=int)
+        self.visited_edges = -1 * np.ones(np.amax(self.reduced_network.edges_list) + 1, dtype=int)
+        self.loops_list = []
         # print(f"Number of nodes after reduction: {network.get_number_of_nodes()}.")
 
         # starting_nodes_with_loops = 0
@@ -116,7 +115,10 @@ class LoopFinder:
                 if self.verbose:
                     print("new origin of network: ", node)
                 # reset variables used during search to 0
-                self.crossing_sum = [[0, 0, 0]]
+                # initialize a python list of numpy arrays to keep track of the
+                # cumulative boundary-crossing vector with a zero vector as first element
+                self.crossing_sum = [np.zeros(dim, dtype=int)]
+
                 self.loops_temp = []
                 self.discovery_time_node = 0
                 self.discovery_time_edge = 0

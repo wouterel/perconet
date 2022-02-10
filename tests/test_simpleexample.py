@@ -91,25 +91,22 @@ def test_simple():
     testnet.add_edge(0, 3, np.array([0, 0, 0]))
 
     # we now have a square that doesn't do anything
-
-    if not testnet.crosses_boundaries:
-        print("Network does not cross periodic boundaries in any direction, "
-              "therefore it does not percolate")
+    assert testnet.needs_reducing()
+    assert not testnet.crosses_boundaries()
 
     # add a bond between nodes 1 and 0 that crosses the x-boundary
     testnet.add_edge(1, 0, np.array([1, 0, 0]))
+    assert testnet.crosses_boundaries()
     # add a bond between nodes 1 and 0 that crosses the x-boundary
     testnet.add_edge(2, 3, np.array([1, 0, 0]))
     # add a bond between nodes 3 and 0 that crosses the negative y-boundary
     testnet.add_edge(3, 0, np.array([0, -1, 0]))
 
-    if testnet.needs_reducing:
-        print("Reducing network to simpler form...")
-        my_reduced_network = testnet.get_reduced_network()
-        # print(my_reduced_network)
-        myloops = pn.LoopFinder(my_reduced_network, verbose=False)
-    else:
-        myloops = pn.LoopFinder(testnet, verbose=False)
+    assert testnet.needs_reducing
+    my_reduced_network = testnet.get_reduced_network()
+    assert my_reduced_network.crosses_boundaries()
+    assert not my_reduced_network.needs_reducing()
+    myloops = pn.LoopFinder(my_reduced_network, verbose=False)
     loops = myloops.get_independent_loops()
 
     assert len(loops[0]) == 2  # tests number of loops (2)
@@ -131,5 +128,33 @@ def test_simple():
           " \n independent loops: \n", loops[0])
 
 
+def test_5d():
+    number_of_nodes = 4
+    max_coordination = 6
+    testnet = pn.PeriodicNetwork(number_of_nodes,
+                                 max_coordination,
+                                 verbose=False,
+                                 dim=5)
+    testnet.add_edge(0, 1, np.array([0, 0, 0, 1, 0]))
+    testnet.add_edge(1, 2, np.array([0, 0, 0, 0, -1]))
+    testnet.add_edge(2, 3, np.array([0, 0, 1, 0, 0]))
+    testnet.add_edge(3, 0, np.array([0, 0, 0, 1, 1]))
+    testnet.add_edge(1, 3, np.array([1, 0, 0, 0, 0]))
+
+    # we now have a square that doesn't do anything
+    assert not testnet.needs_reducing()
+    assert testnet.crosses_boundaries()
+
+    myloops = pn.LoopFinder(testnet, verbose=False)
+    loops, n_loops = myloops.get_independent_loops()
+    compare = [np.array([1, 0, -1, 0, 1]),
+               np.array([0, 0, 1, 2, 0])]
+    for i_loop, loop in enumerate(loops):
+        # print(f"loop {i_loop}: {loop}")
+        # print(f"comparing to {compare[i_loop]}")
+        assert np.all(loop == compare[i_loop]) or np.all(loop == -compare[i_loop])
+    return
+
+
 if __name__ == "__main__":
-    test_simple()
+    test_5d()

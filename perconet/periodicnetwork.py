@@ -28,13 +28,15 @@ class PeriodicNetwork:
         verbose (bool, optional):
             Print debugging information to stdout. Defaults to False.
     """
-    def __init__(self, n: int, max_degree=6, verbose=False):
+    def __init__(self, n: int, max_degree=6, verbose=False, dim=3):
         if n < 1:
             raise ValueError("Number of nodes must be a positive integer.")
         self.number_of_nodes = n
         self.max_degree = max_degree
+        self.verbose = verbose
+        self.dimension = dim
         # allocate arrays for per-node info
-        self.boundary_crossing = np.zeros((n, max_degree, 3), dtype=int)
+        self.boundary_crossing = np.zeros((n, max_degree, dim), dtype=int)
         self.neighbors = -1 * np.ones((n, max_degree), dtype=int)
         self.edges_list = -1 * np.ones((n, max_degree), dtype=int)
         self.neighbors_counter = np.zeros(n, dtype=int)
@@ -44,10 +46,12 @@ class PeriodicNetwork:
         self.bond_is_across_boundary = []
         self.n_internal_edges = 0
         self.n_boundary_edges = 0
-        self.verbose = verbose
 
     def get_number_of_nodes(self):
         return self.number_of_nodes
+
+    def get_dimension(self):
+        return self.dimension
 
     def add_edge(self, node1: int, node2: int, boundary_vector):
         """
