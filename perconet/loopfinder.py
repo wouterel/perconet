@@ -66,9 +66,7 @@ class LoopFinder:
                     self.__dfs(neigh)  # find right one
                     # print ("crossing sum now: \n", crossing_sum, "loops temp is:", loops_temp)
                 else:  # we found a loop!
-
                     loop_timestep = self.visited_nodes[neigh]
-
                     loop = current_crossing - self.crossing_sum[loop_timestep]
 
                     self.loops_temp.append(loop.tolist())
@@ -91,8 +89,10 @@ class LoopFinder:
 
         Returns:
             Tuple[:obj:`List` of :obj:`List` of int, int]:
-                (list, int) A tuple containing a raw list of loops,
-                with elements of the form [Bx, By, Bz] and the length of that list.
+                (list, int) A tuple containing a list of the raw loops
+                and the length of that list. Each element of the list of loops
+                is itself a list of the number of times each boundary is
+                crossed by that loop.
         """
 
         if self.network.n_boundary_edges == 0:
@@ -135,12 +135,14 @@ class LoopFinder:
 
     def get_independent_loops(self):
         """
-        Generate a list of linearly independent topologically nontrivial loops.
+        Generate a list of all linearly independent topologically nontrivial loops.
 
         Returns:
             Tuple[:obj:`List` of :obj:`List` of int, int]:
-                (list, int) A tuple containing a list of the independent loops,
-                with elements of the form [Bx, By, Bz] and the length of that list.
+                (list, int) A tuple containing a list of the independent loops
+                and the length of that list. Each element of the list of loops
+                is itself a list of the number of times each boundary is
+                crossed by that loop.
         """
         # loops info should include a cluster label for each loop to denote connected components
         # lump before clean would discard that info
@@ -170,6 +172,8 @@ class LoopFinder:
     def _compare_independence_methods(self):
         """
         Checks if ranks obtained with three methods agree.
+
+        For use in pytest routines. Not part of the API.
         """
         import sympy  # put this here so sympy will be a development-only dependency
         myloops_list = np.asarray(self.get_loops())

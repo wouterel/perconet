@@ -14,11 +14,16 @@ class PeriodicNetwork:
     """Store and analyze the topology of a periodic net.
 
     Periodic nets are graphs embedded in a periodic topology. This class stores
-    the topology of such a graph for the case of a threedimensional periodic
-    box (a 3-torus) and allows to determine its percolation properties.
-    The key question to determine percolation is whether the graph contains any
-    loops that are topologically nontrivial in that they allow to travel from a
-    node to itself with a net nonzero number of boundary crossings.
+    the topology of such a graph for the case of a `d`-dimensional periodic
+    box (a `d`-torus). The dimensionaly defaults to 3 for use in contexts where
+    the box represents physical space, but the :obj:`PeriodicNetwork` and
+    :obj:`LoopFinder` classes work for arbitrary dimension.
+
+    The class stores, for every edge in the graph, a d-dimensional vector
+    indicating the boundary-wrapping properties of that edge. See
+    :obj:`PeriodicNetwork.add_edge` for details. This
+    information is then used by :obj:`LoopFinder` to determine the percolation
+    properties.
 
     Args:
         n (int):
@@ -27,6 +32,8 @@ class PeriodicNetwork:
             The largest number of edges coming out of any node.
         verbose (bool, optional):
             Print debugging information to stdout. Defaults to False.
+        dim (int, optional):
+            Spatial dimension. Defaults to 3.
     """
     def __init__(self, n: int, max_degree=6, verbose=False, dim=3):
         if n < 1:
@@ -67,10 +74,12 @@ class PeriodicNetwork:
                 Valid values range from 0 up to (but not including) the number of nodes of
                 the network (node indices are 0-based).
             boundary_vector (:obj:`List` of int):
-                Vector of three integers (bvx,bvy,bvz) denoting the number of times the edge
-                wraps around the x, y, and z boundaries, respectively.
+                List (or numpy array) of integers denoting the number of times the edge
+                wraps around each boundary, respectively. The length of this
+                list must be equal to the dimensionality of the network (which defaults to 3 but
+                can be overridden during initialization).
                 The sign indicates the wrapping direction (e.g. (-1,0,0) indicates that the edge
-                goes around the x-boundary in the negative x-direction
+                goes around the `x`-boundary in the negative `x`-direction
                 when going from node1 to node2.
 
         Returns:
@@ -90,6 +99,10 @@ class PeriodicNetwork:
             return False
         if self.verbose:
             print("boundary vector is: ", boundary_vector, self.neighbors_counter)
+        if len(boundary_vector) != self.dimension:
+            print(f"Incorrect boundary vector: {len(boundary_vector)} elements given " +
+                  f"but {self.dimension} expected")
+            return False
 
         # Now we will add the bond data by appending to the various lists
         # Convert to dataclass in the future to be more robust
@@ -148,8 +161,7 @@ class PeriodicNetwork:
                 the constructor. Otherwise the length will be the number of neighbors of i.
 
         Returns:
-            :obj:`list` of int: list of neighbors (along bonds) of node i
-
+            :obj:`numpy.ndarray`: Numpy array (dtype=int) containing list of neighbors of node.
         """
         neighbors_of_node = self.neighbors[node, :]
         if padded:
@@ -228,8 +240,10 @@ class PeriodicNetwork:
             nb_index (int): index of neighbor in neighbor list of node
 
         Returns:
-            int[3]: The vector of integers [bx, by, bz] denoting the number of
-            times each boundary is crossed by this edge.
+            :obj:`numpy.ndarray`: The list of integers denoting the number of
+            times each boundary is crossed by this edge. Provided as    
+            a numpy array with length equal to the dimensionality of the network
+            and dtype=int.
         """
         return self.boundary_crossing[node, nb_index, :]
 
@@ -275,7 +289,9 @@ class PeriodicNetwork:
 
     def decompose(self, internal_only=True):
         """
-        Obtain the cluster decomposition of the network (using only internal bonds).
+        Obtain the cluster decomposition of the network. This method is used
+        by :obj:`LoopFinder` (using internal bonds only) to reduce the network for faster
+        loop finding, but can also be used for generic cluster analysis.
 
         Args:
             internal_only (bool, optional): Defaults to True.
@@ -351,7 +367,8 @@ class PeriodicNetwork:
         largest_functionality = np.max(np.unique(reduced_network_list[:, 0:2],
                                                  return_counts=True)[1])
         # construct new PeriodicNetwork object with n_labels nodes
-        reduced_network = PeriodicNetwork(n_labels, largest_functionality, verbose=self.verbose)
+        reduced_network = PeriodicNetwork(n_labels, largest_functionality,
+                                          verbose=self.verbose, dim=self.dimension)
         # add the edges of the reduced network
         for edge_info in reduced_network_list:
             if self.verbose:

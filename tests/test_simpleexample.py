@@ -135,13 +135,18 @@ def test_5d():
                                  max_coordination,
                                  verbose=False,
                                  dim=5)
+    # check if bc vector with wrong length is rejected
+    # both for numpy array and python list
+    assert not testnet.add_edge(0, 1, np.array([0, 0, 0, 1]))
+    assert not testnet.add_edge(0, 1, [0, 1, 1])
+    # check if bond indeed was not added
+    assert testnet.get_number_of_edges() == 0
+
     testnet.add_edge(0, 1, np.array([0, 0, 0, 1, 0]))
     testnet.add_edge(1, 2, np.array([0, 0, 0, 0, -1]))
     testnet.add_edge(2, 3, np.array([0, 0, 1, 0, 0]))
     testnet.add_edge(3, 0, np.array([0, 0, 0, 1, 1]))
     testnet.add_edge(1, 3, np.array([1, 0, 0, 0, 0]))
-
-    # we now have a square that doesn't do anything
     assert not testnet.needs_reducing()
     assert testnet.crosses_boundaries()
 
@@ -153,6 +158,19 @@ def test_5d():
         # print(f"loop {i_loop}: {loop}")
         # print(f"comparing to {compare[i_loop]}")
         assert np.all(loop == compare[i_loop]) or np.all(loop == -compare[i_loop])
+
+    testnet.add_edge(0, 2, [0, 0, 0, 0, 0])
+    assert testnet.needs_reducing()
+    my_reduced_network = testnet.get_reduced_network()
+    assert my_reduced_network.get_number_of_nodes() == 3
+    assert my_reduced_network.crosses_boundaries()
+    assert not my_reduced_network.needs_reducing()
+    loops, n_loops = myloops.get_independent_loops()
+    assert n_loops == 3
+    # not adding an assertion on the loops themselves
+    # because the ige result is not unique
+    # using hermite normal form for this in the future will help
+    # print(n_loops, loops)
     return
 
 
