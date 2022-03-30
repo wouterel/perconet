@@ -137,6 +137,8 @@ class LoopFinder:
         """
         Generate a list of all linearly independent topologically nontrivial loops.
 
+        The list is returned in Hermite normal form. See :ref:`Loop independence` for details.
+
         Returns:
             Tuple[:obj:`List` of :obj:`List` of int, int]:
                 (list, int) A tuple containing a list of the independent loops
@@ -160,7 +162,7 @@ class LoopFinder:
         if self.verbose:
             print("loops list: ", myloops_list)
             print(f"rank according to numpy.linalg {np.linalg.matrix_rank(myloops_list, tol=1e-8)}")
-        independent_loops, _, Nloops = looptools.integer_gaussian_elimination(myloops_list)
+        independent_loops, _, Nloops = looptools.hermite_normal_form(myloops_list)
         # the ige method has left the 0-rows in there so need to remove them now
         independent_loops = independent_loops[:Nloops]
 
@@ -197,7 +199,7 @@ class LoopFinder:
             print(myloops_list)
         independent_loops = myloops_list[list(inds)]
 
-        my_ind_loops, _, my_Nloops = looptools.integer_gaussian_elimination(myloops_list)
+        my_ind_loops, _, my_Nloops = looptools.hermite_normal_form(myloops_list)
         # the ige method has left the 0-rows in there so need to remove them now
         my_ind_loops = my_ind_loops[:my_Nloops]
         assert my_Nloops == Nloops

@@ -10,16 +10,53 @@ def swaprows(a: np.ndarray, i1: int, i2: int):
     a[(i1, i2), :] = a[(i2, i1), :]
 
 
-def integer_gaussian_elimination(input: np.ndarray):
+def multiply_row(mat, shadow=None, row=0, factor=1):
     """
-    Construct a row echelon form of the input matrix using only row swapping and
-    addition of integer multiples of other rows to rows.
+    Mutiply row of matrix mat by factor. Note that the only nontrivial
+    multiplication that is allowed is by a factor -1 when reducing a lattice basis.
+
+    If set, apply the same transformation to the shadow matrix.
+    This is useful to keep track of the transformation matrix representing
+    the elimination result.
+    """
+    mat[row, :] = mat[row, :] * factor
+    if isinstance(shadow, np.ndarray):
+        shadow[row, :] = shadow[row, :] * factor
+
+
+def reduce_row(mat, shadow=None, pivot_col=0, source_row=0, target_row=0):
+    """
+    Add integer multiple of source row of mat to target row of mat such that
+    the pivot element mat[target_row, pivot_col] becomes as close to 0
+    as possbible (rounds such that it ends up nonnegative).
+
+    If set, apply the same transformation to the shadow matrix.
+    This is useful to keep track of the transformation matrix representing
+    the elimination result.
+    """
+    if target_row == source_row:
+        return
+    q = mat[target_row, pivot_col] // mat[source_row, pivot_col]  # integer division
+    if q != 0:
+        # update matrix a and keep track of the corresponding transformation matrix
+        mat[target_row, :] -= q * mat[source_row, :]
+        if isinstance(shadow, np.ndarray):
+            shadow[target_row, :] -= q * shadow[source_row, :]
+
+
+def hermite_normal_form(input: np.ndarray):
+    """
+    Construct the Hermite normal form of the input matrix using only
+    * row swapping;
+    * addition of integer multiples of other rows to rows;
+    * multiplication of entire rows by -1;
 
     Returns:
         Tuple[:obj:`np.ndarray`, :obj:`np.ndarray`, int]:
-            Tuple (r, u, rank) with r representing the row echelon form of input,
-            u representing the orthogonal transformation matrix and rank the
-            number of nonzero rows of r.
+            Tuple (r, u, rank) with r representing the Hermite normal form of input,
+            u representing the orthogonal transformation matrix such that
+            u*input=r and rank the number of nonzero rows of r which equals
+            the rank of input.
     """
     a = input.copy()
     (m, n) = a.shape  # number of rows, columns
@@ -48,15 +85,10 @@ def integer_gaussian_elimination(input: np.ndarray):
         source_row = np.where(np.abs(a[row:, col]) == smallest_abs)[0][0]+row
         to_next_col = True  # default value. will be set to false later if nonzero elements remain
         for target_row in range(row, m):
-            # we will be adding multiples of row source_row to all other rows
-            # to make their elements in the current column as close to 0 as we can
-            if target_row == source_row:
+            if source_row == target_row:
                 continue
-            q = a[target_row, col] // a[source_row, col]  # integer division
-            if q != 0:
-                # update matrix a and keep track of the corresponding transformation matrix
-                a[target_row, :] -= q * a[source_row, :]
-                transform[target_row, :] -= q * transform[source_row, :]
+            reduce_row(a, shadow=transform, pivot_col=col, source_row=source_row,
+                       target_row=target_row)
             if a[target_row, col] != 0:
                 # at least one of the rows still has a nonzero element
                 # this happens when not all elements in this column are multiples of the smallest
@@ -69,6 +101,15 @@ def integer_gaussian_elimination(input: np.ndarray):
             if source_row != row:
                 swaprows(a, source_row, row)
                 swaprows(transform, source_row, row)
+            # pivot element is now in "row"
+            # HNF rule: pivot element must be positive
+            if a[row, col] < 0:
+                multiply_row(a, shadow=transform, row=row, factor=-1)
+            # Now finalize the HNF by using the just-finished row to make the elements
+            # above the pivot element nonnegative and smaller than the pivot
+            for target_row in range(row):
+                reduce_row(a, shadow=transform, pivot_col=col, source_row=row,
+                           target_row=target_row)
             row += 1
             # It's tempting to also update col here
             # but then we'd have to duplicate the rank-checking code

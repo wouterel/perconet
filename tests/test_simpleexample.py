@@ -152,11 +152,13 @@ def test_5d():
 
     myloops = pn.LoopFinder(testnet, verbose=False)
     loops, n_loops = myloops.get_independent_loops()
-    compare = [np.array([1, 0, -1, 0, 1]),
+    compare = [np.array([1, 0, 0, 2, 1]),
                np.array([0, 0, 1, 2, 0])]
+    # print(loops)
+    # print(compare)
     for i_loop, loop in enumerate(loops):
-        # print(f"loop {i_loop}: {loop}")
-        # print(f"comparing to {compare[i_loop]}")
+        print(f"loop {i_loop}: {loop}")
+        print(f"comparing to {compare[i_loop]}")
         assert np.all(loop == compare[i_loop]) or np.all(loop == -compare[i_loop])
 
     testnet.add_edge(0, 2, [0, 0, 0, 0, 0])
