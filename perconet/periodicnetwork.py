@@ -241,7 +241,7 @@ class PeriodicNetwork:
 
         Returns:
             :obj:`numpy.ndarray`: The list of integers denoting the number of
-            times each boundary is crossed by this edge. Provided as    
+            times each boundary is crossed by this edge. Provided as
             a numpy array with length equal to the dimensionality of the network
             and dtype=int.
         """

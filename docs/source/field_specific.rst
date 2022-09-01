@@ -47,10 +47,11 @@ The subgroup of :math:`\mathbb{Z}^d` that is actually realized by the periodic
 net is a lattice, for which the method
 :py:meth:`perconet.LoopFinder.get_independent_loops` provides a basis.
 One can also say these are the generators of the subgroup. The basis
-is provided in a row echelon form which is not unique: To determine
-whether two graphs have the exact same percolation structure one should
-compare the Hermite Normal Forms of the matrices representing the bases.
-This is a feature we may add to **perconet** in the near future. For some
+is provided through a matrix of which the rows are the basis vectors,
+which is presented in Hermite Normal Form to make the choice of basis vectors
+unique. This gives a characterization of the topological strcuture of a periodic nets
+that can be used to define equivalence between them.
+For some
 applications it may be desirable to have a near-orthogonal basis, in which
 case improving it via the LLL-algorithm may prove useful.
 
