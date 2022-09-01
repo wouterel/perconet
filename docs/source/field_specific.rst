@@ -26,7 +26,8 @@ for percolation analysis of systems with simple boundaries. To this end, denote
 a certain subset of the nodes to be one *side* of the system, and another subset
 to be the other side, and then ask **perconet** if the two sides are connected.
 With this approach, even the output of an experimental image analysis 
-process could be used as input.
+process could be used as input. We may features to perconet in the future to automate
+this.
 
 
 Mathematicians
@@ -59,4 +60,10 @@ case improving it via the LLL-algorithm may prove useful.
 Physicists and mechanical engineers
 -----------------------------------
 
-bla
+Related to the gelation application described above. Perconet can be used to extract
+the percolation properties of structures and spring networks, and thus provide
+information on the rigidity of network structures. Percolating directions generally
+indicate directions in which the network would be able to support a tensile load.
+Conversely, directions that are perpendicular to all percolating directions are
+directions in which which structure is not rigid. See :doc:`why_loopfinding` for more
+details.

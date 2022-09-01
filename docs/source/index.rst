@@ -12,6 +12,7 @@
 
    installing
    perconet
+   example
 
 .. toctree::
    :maxdepth: 2
