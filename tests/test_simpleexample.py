@@ -1,5 +1,12 @@
-# import sys
-# sys.path.append("..")
+# This file is part of the perconet package
+# (c) 2022 Eindhoven University of Technology
+# Released under EUPL v1.2
+# See LICENSE file for details
+# Contributors:
+# * Chiara Raffaelli
+# * Wouter G. Ellenbroek
+# Contributing: https://github.com/wouterel/perconet
+
 import perconet as pn
 import numpy as np
 import pytest

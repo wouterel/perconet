@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 10 16:02:35 2020
-
-@author: craffaelli
-"""
+# This file is part of the perconet package
+# (c) 2022 Eindhoven University of Technology
+# Released under EUPL v1.2
+# See LICENSE file for details
+# Contributors:
+# * Chiara Raffaelli
+# * Wouter G. Ellenbroek
+# Contributing: https://github.com/wouterel/perconet
 
 import numpy as np
 

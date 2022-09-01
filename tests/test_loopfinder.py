@@ -1,16 +1,15 @@
 
-"""
-Created on Fri Apr 10 18:04:33 2020
+# This file is part of the perconet package
+# (c) 2022 Eindhoven University of Technology
+# Released under EUPL v1.2
+# See LICENSE file for details
+# Contributors:
+# * Chiara Raffaelli
+# * Wouter G. Ellenbroek
+# Contributing: https://github.com/wouterel/perconet
 
-@authors: craffaelli,wouterel
-"""
-
-# import sys
-# sys.path.append("..")
-# removed this because within the poetry setup it is not necessary
 import perconet as pn
 import numpy as np
-# sys.path.append("tests")
 import networkdata_testing as ndata
 from pn_test_helpers import initialize_test
 
