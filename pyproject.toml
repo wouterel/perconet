@@ -1,9 +1,16 @@
 [tool.poetry]
 name = "perconet"
-version = "0.1.0"
+version = "0.1.1"
 description = "Analyze percolation properties of periodic networks"
 authors = ["Chiara Raffaelli, Wouter G. Ellenbroek"]
-license = "BSD-3"
+homepage = "https://github.com/wouterel/perconet"
+readme = "README.rst"
+license = "EUPL-1.2"
+classifiers = [
+	"Intended Audience :: Science/Research",
+	"Development Status :: 4 - Beta"
+]
+
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11"
