@@ -19,7 +19,7 @@ ways in which the structure wraps around the boundary.
 
 Documentation
 =============
-*Add links to docs after setting up readthedocs account*
+*Will add links to docs after setting up readthedocs account*
 
 Release Status
 ==============
@@ -31,5 +31,6 @@ and suspect you found a bug, please open an issue on github.
 Credits and License
 ===================
 Perconet was written by Chiara Raffaelli and Wouter G. Ellenbroek.
+Issue reports and contributions are welcome through our `GitHub repository <https://github.com/wouterel/perconet>`_
 
-*Add links to License file on docs/github*
+We share **perconet** under the European Union Public License. See LICENSE file for details.
