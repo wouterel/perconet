@@ -19,7 +19,7 @@ ways in which the structure wraps around the boundary.
 
 Documentation
 =============
-*Will add links to docs after setting up readthedocs account*
+Documentation is generated using Sphinx and hosted on `ReadTheDocs <https://perconet.readthedocs.io/>`_.
 
 Release Status
 ==============
