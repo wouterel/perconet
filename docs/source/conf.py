@@ -13,7 +13,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
-
+import toml
 
 # -- Project information -----------------------------------------------------
 
@@ -22,7 +22,7 @@ copyright = '2021, Chiara Raffaelli, Wouter G. Ellenbroek'
 author = 'Chiara Raffaelli, Wouter G. Ellenbroek'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.1'
+release = toml.load("../../pyproject.toml")['tool']['poetry']['version']
 
 
 # -- General configuration ---------------------------------------------------
