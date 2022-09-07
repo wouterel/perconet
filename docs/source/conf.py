@@ -10,7 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
 import toml
@@ -22,7 +22,10 @@ copyright = '2021, Chiara Raffaelli, Wouter G. Ellenbroek'
 author = 'Chiara Raffaelli, Wouter G. Ellenbroek'
 
 # The full version, including alpha/beta/rc tags
-release = toml.load("../../pyproject.toml")['tool']['poetry']['version']
+docsrcdir = os.path.dirname(os.path.abspath(__file__))
+tomlfile = os.path.join(docsrcdir, "..", "..", "pyproject.toml")
+print(f"Getting version from {tomlfile}")
+release = toml.load(tomlfile)['tool']['poetry']['version']
 
 
 # -- General configuration ---------------------------------------------------
