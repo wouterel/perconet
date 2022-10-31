@@ -8,7 +8,6 @@
 # Contributing: https://github.com/wouterel/perconet
 
 import perconet as pn
-# import pytest
 import toml
 import os
 
