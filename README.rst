@@ -2,6 +2,10 @@
 perconet
 ========
 
+.. image:: https://readthedocs.org/projects/perconet/badge/?version=stable
+    :target: https://perconet.readthedocs.io/en/stable/?badge=stable
+    :alt: Documentation Status
+
 Overview
 ========
 
