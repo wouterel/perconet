@@ -35,7 +35,8 @@ release = toml.load(tomlfile)['tool']['poetry']['version']
 # ones.
 
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.napoleon']
+              'sphinx.ext.napoleon',
+              'sphinx_rtd_theme']
 # WGE: adding nbsphinx here would improve some CSS but it's not worth the
 # large number of extra dev dependencies.
 
