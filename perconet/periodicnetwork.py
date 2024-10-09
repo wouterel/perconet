@@ -329,7 +329,7 @@ class PeriodicNetwork:
                 # using the addition operator
                 edgedata = connected_labels + self.simple_boundary_crossing[edge]
                 reduced_network.append(edgedata)
-        reduced_network = np.asarray(reduced_network)
+        reduced_network = np.asarray(reduced_network, dtype=int)
         # The main reason to collect the edge data in a 5-column numpy array is
         # that we can now use np.unique to get rid of duplicate edges
         reduced_network = np.unique(reduced_network, axis=0)
