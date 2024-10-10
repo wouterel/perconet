@@ -17,6 +17,11 @@ the periodic boundary*?
 **perconet** implements a loop finder algorithm that reports the number of *independent*
 ways in which the structure wraps around the boundary.
 
+Installation
+============
+**perconet** can be installed in any Python environment (version 3.8 or higher) using `pip install perconet`.
+See `https://pypi.org/project/perconet/ <https://pypi.org/project/perconet/>`_ for package details.
+
 Documentation
 =============
 Documentation is generated using Sphinx and hosted on `ReadTheDocs <https://perconet.readthedocs.io/>`_.
