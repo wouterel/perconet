@@ -19,7 +19,7 @@ ways in which the structure wraps around the boundary.
 
 Installation
 ============
-**perconet** can be installed in any Python environment (version 3.8 or higher) using `pip install perconet`.
+**perconet** can be installed in any Python environment (version 3.8 or higher) using ``pip install perconet``.
 See `https://pypi.org/project/perconet/ <https://pypi.org/project/perconet/>`_ for package details.
 
 Documentation
