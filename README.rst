@@ -2,6 +2,11 @@
 perconet
 ========
 
+.. image:: https://shields.io/pypi/v/perconet
+    :target: https://pypi.org/project/perconet
+    :alt: PyPI Version
+
+
 .. image:: https://readthedocs.org/projects/perconet/badge/?version=stable
     :target: https://perconet.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
