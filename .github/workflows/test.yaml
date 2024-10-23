@@ -1,0 +1,46 @@
+name: Tests for perconet
+
+on:
+  push:
+    branches:
+      - develop 
+  pull_request:
+    branches:
+      - develop 
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  workflow_dispatch:
+
+jobs:
+  Build-n-test:
+
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        toolchain:
+          - {compiler: gcc, version: 13}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+        poetry install --with dev
+
+    - name: Test with pytest
+      run: |
+        poetry run pytest --cov
+        poetry run coverage xml
