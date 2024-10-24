@@ -16,6 +16,10 @@ perconet
     :target: https://github.com/wouterel/perconet/blob/develop/LICENSE
     :alt: EUPL-1.2
 
+.. image:: https://github.com/wouterel/perconet/actions/workflows/test.yaml/badge.svg?branch=develop
+   :target: https://github.com/wouterel/perconet/actions/workflows/test.yaml
+   :alt: Test
+
 Overview
 ========
 
