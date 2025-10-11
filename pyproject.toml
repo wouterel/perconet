@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "perconet"
-version = "0.3.1"
+version = "0.4.0"
 description = "Analyze percolation properties of periodic networks"
 authors = ["Chiara Raffaelli, Wouter G. Ellenbroek"]
 homepage = "https://github.com/wouterel/perconet"
@@ -13,11 +13,11 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.14"
+python = ">=3.8,<3.15"
 numpy = [
     {version = "^1.23,<1.25", python = "3.8"},
-    {version = ">=1.23,<2.2", python = ">=3.9,<3.12"},
-    {version = ">=1.26,<2.2", python = ">=3.12"}
+    {version = ">=1.23,<2.4", python = ">=3.9,<3.12"},
+    {version = ">=1.26,<2.4", python = ">=3.12"}
 ]
 
 
