@@ -1,8 +1,10 @@
 [project]
 name = "perconet"
-version = "0.4.2"
+version = "0.4.3"
 description = "Analyze percolation properties of periodic networks"
-author = "Chiara Raffeelli, Wouter Ellenbroek"
+authors = [
+    { name = "Chiara Raffaelli and Wouter Ellenbroek" }
+]
 homepage = "https://github.com/wouterel/perconet"
 requires-python = ">=3.8,<3.15"
 dependencies = [
@@ -12,11 +14,20 @@ dependencies = [
 ]
 readme = "README.rst"
 license = "EUPL-1.2"
+dynamic = [ "classifiers" ]
+
+
+[tool.poetry]
 classifiers = [
 	"Intended Audience :: Science/Research",
-	"Development Status :: 4 - Beta"
+	"Development Status :: 4 - Beta",
+	"License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)"
 ]
 
+
+[project.urls]
+repository = "https://github.com/wouterel/perconet"
+documentation = "https://perconet.readthedocs.io/"
 
 [tool.poetry.group.dev.dependencies]
 toml = "^0.10.2"
