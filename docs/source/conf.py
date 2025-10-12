@@ -25,7 +25,7 @@ author = 'Chiara Raffaelli, Wouter G. Ellenbroek'
 docsrcdir = os.path.dirname(os.path.abspath(__file__))
 tomlfile = os.path.join(docsrcdir, "..", "..", "pyproject.toml")
 print(f"Getting version from {tomlfile}")
-release = toml.load(tomlfile)['tool']['poetry']['version']
+release = toml.load(tomlfile)['project']['version']
 
 
 # -- General configuration ---------------------------------------------------

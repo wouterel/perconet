@@ -2,10 +2,7 @@
 name = "perconet"
 version = "0.4.1"
 description = "Analyze percolation properties of periodic networks"
-authors = [
-    {name = "Chiara Raffaelli"},
-    {name = "Wouter Ellenbroek", email = "w.g.ellenbroek@tue.nl"}
-]
+author = "Chiara Raffeelli, Wouter Ellenbroek"
 homepage = "https://github.com/wouterel/perconet"
 requires-python = ">=3.8,<3.15"
 dependencies = [
