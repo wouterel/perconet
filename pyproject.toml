@@ -1,6 +1,6 @@
 [project]
 name = "perconet"
-version = "0.4.0"
+version = "0.4.1"
 description = "Analyze percolation properties of periodic networks"
 authors = [
     {name = "Chiara Raffaelli"},

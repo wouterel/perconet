@@ -30,4 +30,4 @@ from perconet.loopfinder import LoopFinder
 
 __all__ = ["PeriodicNetwork", "LoopFinder"]
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
