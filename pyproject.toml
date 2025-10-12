@@ -1,6 +1,6 @@
 [project]
 name = "perconet"
-version = "0.4.1"
+version = "0.4.2"
 description = "Analyze percolation properties of periodic networks"
 author = "Chiara Raffeelli, Wouter Ellenbroek"
 homepage = "https://github.com/wouterel/perconet"
