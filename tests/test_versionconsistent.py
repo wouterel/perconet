@@ -15,7 +15,7 @@ import os
 def test_version():
     testdir = os.path.dirname(os.path.abspath(__file__))
     tomlfile = os.path.join(testdir, "..", "pyproject.toml")
-    release = toml.load(tomlfile)['tool']['poetry']['version']
+    release = toml.load(tomlfile)['project']['version']
     assert release == pn.__version__
 
 
