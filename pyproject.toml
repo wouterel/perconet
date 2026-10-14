@@ -8,8 +8,10 @@ authors = [
 homepage = "https://github.com/wouterel/perconet"
 requires-python = ">=3.9,<3.16"
 dependencies = [
-    "numpy (>=1.23,<2.4) ; python_version >= '3.9' and python_version < '3.12'",
-    "numpy (>=1.26,<2.6) ; python_version >= '3.12' and python_version < '3.16'",
+    "numpy>=1.23,<2.1 ; python_version < '3.10'",
+    "numpy>=1.23,<2.3 ; python_version >= '3.10' and python_version < '3.11'",
+    "numpy>=1.26,<2.5 ; python_version >= '3.11' and python_version < '3.12'",
+    "numpy>=1.26,<2.6 ; python_version >= '3.12' and python_version < '3.16'",
 ]
 readme = "README.rst"
 license = "EUPL-1.2"
