@@ -6,9 +6,8 @@ authors = [
     { name = "Chiara Raffaelli and Wouter Ellenbroek" }
 ]
 homepage = "https://github.com/wouterel/perconet"
-requires-python = ">=3.8,<3.16"
+requires-python = ">=3.9,<3.16"
 dependencies = [
-    "numpy (>=1.23,<1.25); python_version >= '3.8' and python_version < '3.9'",
     "numpy (>=1.23,<2.4) ; python_version >= '3.9' and python_version < '3.12'",
     "numpy (>=1.26,<2.6) ; python_version >= '3.12' and python_version < '3.16'",
 ]
@@ -20,8 +19,7 @@ dynamic = [ "classifiers" ]
 [tool.poetry]
 classifiers = [
 	"Intended Audience :: Science/Research",
-	"Development Status :: 4 - Beta",
-	"License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)"
+	"Development Status :: 4 - Beta"
 ]
 
 
